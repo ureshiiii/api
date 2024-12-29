@@ -3,110 +3,80 @@ import db from '../config/database.js';
 
 const router = express.Router();
 
-// get all donordata
-router.get('/', (req, res) => {
-  db.query('SELECT * FROM donorData', (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil data donate jir' });
-      return;
-    }
+// Get all donor data
+router.get('/', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM donorData');
     res.json(results);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data donor.' });
+  }
 });
 
-// get donordata berdasarkan id
-router.get('/:id', (req, res) => {
+// Get donor data by ID
+router.get('/:id', async (req, res) => {
   const id = req.params.id;
-  const query = 'SELECT * FROM donorData WHERE id = ?';
-
-  db.query(query, [id], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil data donate jir' });
-      return;
+  try {
+    const [results] = await db.query('SELECT * FROM donorData WHERE id = ?', [id]);
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'ID donor tidak ditemukan.' });
     }
-    if (result.length === 0) {
-      res.status(404).json({ message: 'ID Data donate nya gada kocak, coba cek lagi id nya' });
-      return;
-    }
-    res.json(result[0]);
-  });
+    res.json(results[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data donor.' });
+  }
 });
 
-// menambahkan donordata baru
-router.post('/', (req, res) => {
-  const newDonor = req.body;
-  const query = `
-    INSERT INTO donorData (donor, amount, icon) 
-    VALUES (?, ?, ?)
-  `;
-  const values = [
-    newDonor.donor,
-    newDonor.amount,
-    newDonor.icon
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal membuat data donate baru han' });
-      return;
-    }
-    res.status(201).json({
-      message: 'Data donate berhasil dibuat han. Cek ulang ya',
-      id: result.insertId
-    });
-  });
+// Add new donor data
+router.post('/', async (req, res) => {
+  const { donor, amount, icon } = req.body;
+  try {
+    const [result] = await db.query(
+      'INSERT INTO donorData (donor, amount, icon) VALUES (?, ?, ?)',
+      [donor, amount, icon]
+    );
+    res.status(201).json({ message: 'Data donor berhasil ditambahkan.', id: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menambahkan data donor.' });
+  }
 });
 
-// mengubah/mengedit donordata berdasarkan id
-router.put('/:id', (req, res) => {
+// Update donor data by ID
+router.put('/:id', async (req, res) => {
   const id = req.params.id;
-  const updatedDonor = req.body;
-  const query = `
-    UPDATE donorData 
-    SET donor = ?, amount = ?, icon = ? 
-    WHERE id = ?
-  `;
-  const values = [
-    updatedDonor.donor,
-    updatedDonor.amount,
-    updatedDonor.icon,
-    id
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengupdate data donate baru jir' });
-      return;
-    }
+  const { donor, amount, icon } = req.body;
+  try {
+    const [result] = await db.query(
+      'UPDATE donorData SET donor = ?, amount = ?, icon = ? WHERE id = ?',
+      [donor, amount, icon, id]
+    );
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Data donate nya gada kocak, coba cek lagi id nya' });
-      return;
+      return res.status(404).json({ message: 'ID donor tidak ditemukan.' });
     }
-    res.json({ message: 'Data donate nya berhasil di update' });
-  });
+    res.json({ message: 'Data donor berhasil diperbarui.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal memperbarui data donor.' });
+  }
 });
 
-// menghapus donordata berdasarkan id
-router.delete('/:id', (req, res) => {
+// Delete donor data by ID
+router.delete('/:id', async (req, res) => {
   const id = req.params.id;
-  const query = 'DELETE FROM donorData WHERE id = ?';
-
-  db.query(query, [id], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal menghapus data donate nya jir' });
-      return;
-    }
+  try {
+    const [result] = await db.query('DELETE FROM donorData WHERE id = ?', [id]);
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Data donate nya gada kocak, coba cek lagi id nya' });
-      return;
+      return res.status(404).json({ message: 'ID donor tidak ditemukan.' });
     }
-    res.json({ message: 'Data donate nya berhasil di hapus' });
-  });
+    res.json({ message: 'Data donor berhasil dihapus.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menghapus data donor.' });
+  }
 });
 
 export default router;
+  
