@@ -1,7 +1,6 @@
 import express from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import donorRoutes from './routes/donorData.js';
 
 dotenv.config();
 
