@@ -9,14 +9,6 @@ import db from './config/database.js';
 const app = express();
 const port = process.env.PORT || 3000;
 
-db.connect(err => {
-  if (err) {
-    console.error('Error connecting to database:', err);
-    return;
-  }
-  console.log('Connected to database');
-});
-
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
