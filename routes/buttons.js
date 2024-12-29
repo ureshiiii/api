@@ -3,116 +3,79 @@ import db from '../config/database.js';
 
 const router = express.Router();
 
-// get all
-router.get('/', (req, res) => {
-  db.query('SELECT * FROM buttons', (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil data buttons jir' });
-      return;
-    }
+// Get all buttons data
+router.get('/', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM buttons');
     res.json(results);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data buttons.' });
+  }
 });
 
-// get berdasarkan id
-router.get('/:id', (req, res) => {
+// Get button data by ID
+router.get('/:id', async (req, res) => {
   const idButton = req.params.id;
-  const query = 'SELECT * FROM buttons WHERE id_button = ?';
-
-  db.query(query, [idButton], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil data buttons jir' });
-      return;
+  try {
+    const [results] = await db.query('SELECT * FROM buttons WHERE id_button = ?', [idButton]);
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'ID button tidak ditemukan.' });
     }
-    if (result.length === 0) {
-      res.status(404).json({ message: 'ID Buttons nya gada kocak, coba cek lagi id nya' });
-      return;
-    }
-    res.json(result[0]);
-  });
+    res.json(results[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data buttons.' });
+  }
 });
 
-// nambah button baru
-router.post('/', (req, res) => {
+// Add new button data
+router.post('/', async (req, res) => {
   const newButton = req.body;
-  const query = `
-    INSERT INTO buttons (link, image_src, title, promo_label, sub_title, img_header) 
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
-  const values = [
-    newButton.link,
-    newButton.image_src,
-    newButton.title,
-    newButton.promo_label,
-    newButton.sub_title,
-    newButton.img_header
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal membuat buttons baru han' });
-      return;
-    }
-    res.status(201).json({
-      message: 'Button berhasil dibuat han. Cek ulang ya',
-      id_button: result.insertId
-    });
-  });
+  try {
+    const [result] = await db.query(
+      'INSERT INTO buttons (link, image_src, title, promo_label, sub_title, img_header) VALUES (?, ?, ?, ?, ?, ?)',
+      [newButton.link, newButton.image_src, newButton.title, newButton.promo_label, newButton.sub_title, newButton.img_header]
+    );
+    res.status(201).json({ message: 'Data button berhasil ditambahkan.', id_button: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menambahkan data buttons.' });
+  }
 });
 
-// update/edit button
-router.put('/:id', (req, res) => {
+// Update button data by ID
+router.put('/:id', async (req, res) => {
   const idButton = req.params.id;
   const updatedButton = req.body;
-  const query = `
-    UPDATE buttons 
-    SET link = ?, image_src = ?, title = ?, promo_label = ?, sub_title = ?, img_header = ? 
-    WHERE id_button = ?
-  `;
-  const values = [
-    updatedButton.link,
-    updatedButton.image_src,
-    updatedButton.title,
-    updatedButton.promo_label,
-    updatedButton.sub_title,
-    updatedButton.img_header,
-    idButton
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengupdate buttons baru jir' });
-      return;
-    }
+  try {
+    const [result] = await db.query(
+      'UPDATE buttons SET link = ?, image_src = ?, title = ?, promo_label = ?, sub_title = ?, img_header = ? WHERE id_button = ?',
+      [updatedButton.link, updatedButton.image_src, updatedButton.title, updatedButton.promo_label, updatedButton.sub_title, updatedButton.img_header, idButton]
+    );
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Buttons nya gada kocak, coba cek lagi id nya' });
-      return;
+      return res.status(404).json({ message: 'ID button tidak ditemukan.' });
     }
-    res.json({ message: 'Button nya berhasil di update' });
-  });
+    res.json({ message: 'Data button berhasil diperbarui.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal memperbarui data buttons.' });
+  }
 });
 
-// hapus button berdasarkan id
-router.delete('/:id', (req, res) => {
+// Delete button data by ID
+router.delete('/:id', async (req, res) => {
   const idButton = req.params.id;
-  const query = 'DELETE FROM buttons WHERE id_button = ?';
-
-  db.query(query, [idButton], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal menghapus button nya jir' });
-      return;
-    }
+  try {
+    const [result] = await db.query('DELETE FROM buttons WHERE id_button = ?', [idButton]);
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Buttons nya gada kocak, coba cek lagi id nya' });
-      return;
+      return res.status(404).json({ message: 'ID button tidak ditemukan.' });
     }
-    res.json({ message: 'Button nya berhadil di hapus' });
-  });
+    res.json({ message: 'Data button berhasil dihapus.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menghapus data buttons.' });
+  }
 });
 
 export default router;

@@ -3,106 +3,79 @@ import db from '../config/database.js';
 
 const router = express.Router();
 
-// get all kategori
-router.get('/', (req, res) => {
-  db.query('SELECT * FROM kategori', (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil kategori jir' });
-      return;
-    }
+// Get all kategori data
+router.get('/', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM kategori');
     res.json(results);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data kategori.' });
+  }
 });
 
-// get kategori berdasarkan id
-router.get('/:id', (req, res) => {
+// Get kategori data by ID
+router.get('/:id', async (req, res) => {
   const idKategori = req.params.id;
-  const query = 'SELECT * FROM kategori WHERE id_kategori = ?';
-
-  db.query(query, [idKategori], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil kategori jir' });
-      return;
+  try {
+    const [results] = await db.query('SELECT * FROM kategori WHERE id_kategori = ?', [idKategori]);
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'ID kategori tidak ditemukan.' });
     }
-    if (result.length === 0) {
-      res.status(404).json({ message: 'ID Kategori nya gada kocak, coba cek lagi id nya' });
-      return;
-    }
-    res.json(result[0]);
-  });
+    res.json(results[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data kategori.' });
+  }
 });
 
-// menambahkan kategori baru
-router.post('/', (req, res) => {
+// Add new kategori data
+router.post('/', async (req, res) => {
   const newKategori = req.body;
-  const query = `
-    INSERT INTO kategori (nama_kategori) 
-    VALUES (?)
-  `;
-  const values = [
-    newKategori.nama_kategori
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal membuat kategori baru han' });
-      return;
-    }
-    res.status(201).json({
-      message: 'Kategori berhasil dibuat han. Cek ulang ya',
-      id_kategori: result.insertId
-    });
-  });
+  try {
+    const [result] = await db.query(
+      'INSERT INTO kategori (nama_kategori) VALUES (?)',
+      [newKategori.nama_kategori]
+    );
+    res.status(201).json({ message: 'Data kategori berhasil ditambahkan.', id_kategori: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menambahkan data kategori.' });
+  }
 });
 
-// edit/ubah kategori berdasarkan id
-router.put('/:id', (req, res) => {
+// Update kategori data by ID
+router.put('/:id', async (req, res) => {
   const idKategori = req.params.id;
   const updatedKategori = req.body;
-  const query = `
-    UPDATE kategori 
-    SET nama_kategori = ? 
-    WHERE id_kategori = ?
-  `;
-  const values = [
-    updatedKategori.nama_kategori,
-    idKategori
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengupdate kategori baru jir' });
-      return;
-    }
+  try {
+    const [result] = await db.query(
+      'UPDATE kategori SET nama_kategori = ? WHERE id_kategori = ?',
+      [updatedKategori.nama_kategori, idKategori]
+    );
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Kategori nya gada kocak, coba cek lagi id nya' });
-      return;
+      return res.status(404).json({ message: 'ID kategori tidak ditemukan.' });
     }
-    res.json({ message: 'Kategori nya berhasil di update' });
-  });
+    res.json({ message: 'Data kategori berhasil diperbarui.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal memperbarui data kategori.' });
+  }
 });
 
-// hapus kategori berdasarkan id
-router.delete('/:id', (req, res) => {
+// Delete kategori data by ID
+router.delete('/:id', async (req, res) => {
   const idKategori = req.params.id;
-  const query = 'DELETE FROM kategori WHERE id_kategori = ?';
-
-  db.query(query, [idKategori], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal menghapus kategori nya jir' });
-      return;
-    }
+  try {
+    const [result] = await db.query('DELETE FROM kategori WHERE id_kategori = ?', [idKategori]);
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Kategori nya gada kocak, coba cek lagi idnya' });
-      return;
+      return res.status(404).json({ message: 'ID kategori tidak ditemukan.' });
     }
-    res.json({ message: 'Kategori nya berhasil di hapus' });
-  });
+    res.json({ message: 'Data kategori berhasil dihapus.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menghapus data kategori.' });
+  }
 });
 
 export default router;

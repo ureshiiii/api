@@ -3,112 +3,79 @@ import db from '../config/database.js';
 
 const router = express.Router();
 
-// get all produk
-router.get('/', (req, res) => {
-  db.query('SELECT * FROM produk', (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil produk jir' });
-      return;
-    }
+// Get all produk data
+router.get('/', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM produk');
     res.json(results);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data produk.' });
+  }
 });
 
-// get produk berdasarkan id
-router.get('/:id', (req, res) => {
+// Get produk data by ID
+router.get('/:id', async (req, res) => {
   const idProduk = req.params.id;
-  const query = 'SELECT * FROM produk WHERE id_produk = ?';
-
-  db.query(query, [idProduk], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil produk jir' });
-      return;
+  try {
+    const [results] = await db.query('SELECT * FROM produk WHERE id_produk = ?', [idProduk]);
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'ID produk tidak ditemukan.' });
     }
-    if (result.length === 0) {
-      res.status(404).json({ message: 'ID Produk nya gada kocak, coba cek lagi id nya' });
-      return;
-    }
-    res.json(result[0]);
-  });
+    res.json(results[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data produk.' });
+  }
 });
 
-// menambah produk baru
-router.post('/', (req, res) => {
+// Add new produk data
+router.post('/', async (req, res) => {
   const newProduk = req.body;
-  const query = `
-    INSERT INTO produk (id_layanan, nama_produk, harga, icon) 
-    VALUES (?, ?, ?, ?)
-  `;
-  const values = [
-    newProduk.id_layanan,
-    newProduk.nama_produk,
-    newProduk.harga,
-    newProduk.icon
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal membuat produk baru han' });
-      return;
-    }
-    res.status(201).json({
-      message: 'Produk berhasil dibuat han. Cek ulang ya',
-      id_produk: result.insertId
-    });
-  });
+  try {
+    const [result] = await db.query(
+      'INSERT INTO produk (id_layanan, nama_produk, harga, icon) VALUES (?, ?, ?, ?)',
+      [newProduk.id_layanan, newProduk.nama_produk, newProduk.harga, newProduk.icon]
+    );
+    res.status(201).json({ message: 'Data produk berhasil ditambahkan.', id_produk: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menambahkan data produk.' });
+  }
 });
 
-// edit/ubah produk berdasarkan id
-router.put('/:id', (req, res) => {
+// Update produk data by ID
+router.put('/:id', async (req, res) => {
   const idProduk = req.params.id;
   const updatedProduk = req.body;
-  const query = `
-    UPDATE produk 
-    SET id_layanan = ?, nama_produk = ?, harga = ?, icon = ? 
-    WHERE id_produk = ?
-  `;
-  const values = [
-    updatedProduk.id_layanan,
-    updatedProduk.nama_produk,
-    updatedProduk.harga,
-    updatedProduk.icon,
-    idProduk
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengupdate produk baru jir' });
-      return;
-    }
+  try {
+    const [result] = await db.query(
+      'UPDATE produk SET id_layanan = ?, nama_produk = ?, harga = ?, icon = ? WHERE id_produk = ?',
+      [updatedProduk.id_layanan, updatedProduk.nama_produk, updatedProduk.harga, updatedProduk.icon, idProduk]
+    );
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Produk nya gada kocak, coba cek lagi id nya' });
-      return;
+      return res.status(404).json({ message: 'ID produk tidak ditemukan.' });
     }
-    res.json({ message: 'Produk nya berhasil di update' });
-  });
+    res.json({ message: 'Data produk berhasil diperbarui.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal memperbarui data produk.' });
+  }
 });
 
-// menghapus produk berdasarkan id
-router.delete('/:id', (req, res) => {
+// Delete produk data by ID
+router.delete('/:id', async (req, res) => {
   const idProduk = req.params.id;
-  const query = 'DELETE FROM produk WHERE id_produk = ?';
-
-  db.query(query, [idProduk], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal menghapus produk jir' });
-      return;
-    }
+  try {
+    const [result] = await db.query('DELETE FROM produk WHERE id_produk = ?', [idProduk]);
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Produk nya gada kocak, coba cek lagi id ya' });
-      return;
+      return res.status(404).json({ message: 'ID produk tidak ditemukan.' });
     }
-    res.json({ message: 'Produk nya berhasil di hapus' });
-  });
+    res.json({ message: 'Data produk berhasil dihapus.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menghapus data produk.' });
+  }
 });
 
 export default router;

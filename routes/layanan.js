@@ -3,108 +3,79 @@ import db from '../config/database.js';
 
 const router = express.Router();
 
-// get all layanan
-router.get('/', (req, res) => {
-  db.query('SELECT * FROM layanan', (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil layanan jir' });
-      return;
-    }
+// Get all layanan data
+router.get('/', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM layanan');
     res.json(results);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data layanan.' });
+  }
 });
 
-// get layanan berdasarkan id
-router.get('/:id', (req, res) => {
+// Get layanan data by ID
+router.get('/:id', async (req, res) => {
   const idLayanan = req.params.id;
-  const query = 'SELECT * FROM layanan WHERE id_layanan = ?';
-
-  db.query(query, [idLayanan], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengambil layanan jir' });
-      return;
+  try {
+    const [results] = await db.query('SELECT * FROM layanan WHERE id_layanan = ?', [idLayanan]);
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'ID layanan tidak ditemukan.' });
     }
-    if (result.length === 0) {
-      res.status(404).json({ message: 'ID Layanan nya gada kocak, coba cek lagi id nya' });
-      return;
-    }
-    res.json(result[0]);
-  });
+    res.json(results[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data layanan.' });
+  }
 });
 
-// menambahkan layanan baru
-router.post('/', (req, res) => {
+// Add new layanan data
+router.post('/', async (req, res) => {
   const newLayanan = req.body;
-  const query = `
-    INSERT INTO layanan (id_kategori, nama_layanan) 
-    VALUES (?, ?)
-  `;
-  const values = [
-    newLayanan.id_kategori,
-    newLayanan.nama_layanan
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal membuat layanan baru han' });
-      return;
-    }
-    res.status(201).json({
-      message: 'Layanan berhasil dibuat han. Cek ulang ya',
-      id_layanan: result.insertId
-    });
-  });
+  try {
+    const [result] = await db.query(
+      'INSERT INTO layanan (id_kategori, nama_layanan) VALUES (?, ?)',
+      [newLayanan.id_kategori, newLayanan.nama_layanan]
+    );
+    res.status(201).json({ message: 'Data layanan berhasil ditambahkan.', id_layanan: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menambahkan data layanan.' });
+  }
 });
 
-// edit/update layanan berdasarkan id
-router.put('/:id', (req, res) => {
+// Update layanan data by ID
+router.put('/:id', async (req, res) => {
   const idLayanan = req.params.id;
   const updatedLayanan = req.body;
-  const query = `
-    UPDATE layanan 
-    SET id_kategori = ?, nama_layanan = ? 
-    WHERE id_layanan = ?
-  `;
-  const values = [
-    updatedLayanan.id_kategori,
-    updatedLayanan.nama_layanan,
-    idLayanan
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal mengupdate layanan baru jir' });
-      return;
-    }
+  try {
+    const [result] = await db.query(
+      'UPDATE layanan SET id_kategori = ?, nama_layanan = ? WHERE id_layanan = ?',
+      [updatedLayanan.id_kategori, updatedLayanan.nama_layanan, idLayanan]
+    );
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Layanan nya gada kocak, coba cek lagi id nya' });
-      return;
+      return res.status(404).json({ message: 'ID layanan tidak ditemukan.' });
     }
-    res.json({ message: 'Layanan nya berhasil di update' });
-  });
+    res.json({ message: 'Data layanan berhasil diperbarui.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal memperbarui data layanan.' });
+  }
 });
 
-// delete layanan berdasarkan id
-router.delete('/:id', (req, res) => {
+// Delete layanan data by ID
+router.delete('/:id', async (req, res) => {
   const idLayanan = req.params.id;
-  const query = 'DELETE FROM layanan WHERE id_layanan = ?';
-
-  db.query(query, [idLayanan], (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Gagal menghapus layanan jir' });
-      return;
-    }
+  try {
+    const [result] = await db.query('DELETE FROM layanan WHERE id_layanan = ?', [idLayanan]);
     if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'ID Layanan nya gada kocak, coba cek lagi idnya' });
-      return;
+      return res.status(404).json({ message: 'ID layanan tidak ditemukan.' });
     }
-    res.json({ message: 'Layanan nya berhasil di hapus' });
-  });
+    res.json({ message: 'Data layanan berhasil dihapus.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menghapus data layanan.' });
+  }
 });
 
 export default router;
