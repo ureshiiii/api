@@ -1,17 +1,12 @@
+import express from 'express';
+import morgan from 'morgan';
 import dotenv from 'dotenv';
+import donorRoutes from './routes/donorData.js';
+
 dotenv.config();
 
-import express from 'express';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import db from './config/database.js';
-
 const app = express();
-const port = process.env.PORT || 3000;
-
-app.use(helmet());
-app.use(morgan('dev'));
-app.use(express.json());
+const PORT = process.env.PORT || 3000;
 
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
@@ -22,16 +17,18 @@ import responsesRoutes from './routes/responses.js';
 import usersRoutes from './routes/users.js';
 
 const apiKeyMiddleware = (req, res, next) => {
-  const key = req.query.key;
-  if (!key) {
+  const apiKey = req.query.apiKey;
+  if (!apiKey) {
     return res.status(401).json({ message: 'API Key tidak diberikan.' });
   }
-  if (key !== "lovefirsha") {
+  if (apiKey !== process.env.API_KEY) {
     return res.status(401).json({ message: 'API Key tidak valid.' });
   }
   next();
 };
 
+app.use(morgan('dev'));
+app.use(express.json());
 app.use('/buttons', apiKeyMiddleware, buttonRoutes);
 app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
 app.use('/kategori', apiKeyMiddleware, kategoriRoutes);
@@ -42,9 +39,10 @@ app.use('/user', usersRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Internal server error' });
+  res.status(500).json({ message: 'Terjadi kesalahan di server.' });
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
+                          
