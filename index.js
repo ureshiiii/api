@@ -30,11 +30,11 @@ import responsesRoutes from './routes/responses.js';
 import usersRoutes from './routes/users.js';
 
 const apiKeyMiddleware = (req, res, next) => {
-  const apiKey = req.query.apiKey;
-  if (!apiKey) {
+  const key = req.query.key;
+  if (!key) {
     return res.status(401).json({ message: 'API Key tidak diberikan.' });
   }
-  if (apiKey !== process.env.API_KEY) {
+  if (key !== "lovefirsha") {
     return res.status(401).json({ message: 'API Key tidak valid.' });
   }
   next();
