@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link href="https://fonts.cdnfonts.com/css/poppins" rel="stylesheet">
+  <link rel="icon" href="https://telegra.ph/file/99902db117e70e9b854ef.jpg" type="image/png">
+  <meta name="HandheldFriendly" content="true">
+  <meta name="theme-color" content="#001D32">
+  <title>List Store</title>
+  <meta name="description" content="Website List store by Ureshii">
+  <meta name="keywords" content="Joki MLBB, Top Up Game, Jasa Edit, Ureshii.id">
+  <meta name="robots" content="index, follow">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "url": "https://www.ureshii.my.id",
+      "logo": "https://www.ureshii.my.id/logo.png"
+    }
+  </script>
+  <meta property="og:image" content="https://www.ureshii.my.id/logo.png">
+  <meta property="og:title" content="List Store">
+  <meta property="og:description" content="Website List store by Ureshii">
+  <meta property="og:url" content="https://www.ureshii.my.id">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="website/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+</head>
+
+<body>
+  <nav class="navigation-bar">
+    <span class="toggle-button"><i class="fa fa-bars"></i></span>
+    <h2 class="logo-store"></h2>
+    <div class="overlay"></div>
+    <ul class="main-menu">
+      <h2 class="menu-logo-store"></h2>
+      <a class="menu-item" href="index.html">Beranda<i class="fa fa-home"></i></a>
+      <a class="menu-item" href="https://wa.me/6283873688108">Whatsapp<i class="fab fa-whatsapp"></i></a>
+      <div class="garis-putus"></div>
+      <a class="menu-item" href="data/login.php">Masuk<i class="fa-solid fa-arrow-right-to-bracket"></i></a>
+      <a class="menu-item" href="data/register.php">Daftar<i class="fa-solid fa-circle-user"></i></a>
+      <div class="garis-putus"></div>
+    </ul>
+  </nav>
+  <script src="website/nav.js"></script>
+  <div class="inner-width">
+    <img src="website/header.jpg" alt="" class="img-header">
+    <div class="deskripsi-store">
+      <h3 class="nama-store">
+        <p></p>
+      </h3>
+      <p class="text-note"></p>
+    </div>
+  </div>
+  <div class="inner-width2">
+    <h3 class="header-title">🔭 - Kategori</h3>
+    <div class="kategori"></div>
+    <div class="garis"></div>
+    <h3 class="header-title">⭐ - List Harga</h3>
+    <div class="item" id="produk-container"></div>
+    <script>
+      const kategoriButtons = document.querySelectorAll('.kategori-button');
+      kategoriButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          kategoriButtons.forEach(otherButton => {
+            otherButton.classList.remove('active');
+          });
+          button.classList.add('active');
+        });
+      });
+
+      // Mengambil parameter URL
+      const urlParams = new URLSearchParams(window.location.search);
+      let namastore = urlParams.get('namastore');
+      let idstore = urlParams.get('idstore');
+
+      // Mengganti "-" dengan spasi, dan sebaliknya
+      namastore = namastore.replace(/-/g, ' '); 
+      idstore = idstore.replace(/-/g, ' ');
+
+      fetch(`https://api.ureshii.my.id/store/${idstore}`)
+        .then(response => response.json())
+        .then(storeData => {
+          const elementsToReplace = document.querySelectorAll('.logo-store, .menu-logo-store, .nama-store, .text-note');
+          elementsToReplace.forEach(element => {
+            let originalText = element.textContent;
+            // Mengganti "-" dengan spasi pada originalText
+            originalText = originalText.replace(/-/g, ' ');
+            const newText = originalText.replace(/Ureshii Store/g, storeData.nama_store);
+            element.textContent = newText;
+          });
+
+          const headerImage = document.querySelector('.img-header');
+          headerImage.alt = storeData.nama_store;
+
+          fetch(`https://api.ureshii.my.id/liststore/store/${idstore}`)
+            .then(response => response.json())
+            .then(data => {
+              const produkContainer = document.getElementById('produk-container');
+              produkContainer.innerHTML = '';
+              data.forEach(produk => {
+                const produkElement = document.createElement('button');
+                produkElement.classList.add('item-produk');
+                produkElement.innerHTML = `
+                  <p class='item-title'>${produk.nama_produk}</p>
+                  <p class='item-harga'>Rp ${produk.harga}</p>
+                `;
+                produkContainer.appendChild(produkElement);
+              });
+              const itemProdukButtons = document.querySelectorAll('.item-produk');
+              itemProdukButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                  itemProdukButtons.forEach(btn => btn.classList.remove('selected'));
+                  button.classList.add('selected');
+                });
+              });
+            })
+            .catch(error => console.error('Error:', error));
+        })
+        .catch(error => console.error('Error:', error));
+    </script>
+  </div>
+</body>
+</html>
