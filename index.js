@@ -2,8 +2,10 @@ import express from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import os from 'os';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import cors from 'cors';
 
-// Import semua file dari folder "routes"
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
 import kategoriRoutes from './routes/kategori.js';
@@ -19,10 +21,42 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const whitelist = ['185.27.134.168', '66.33.60.129', '76.76.21.93']; 
+
+const ipWhitelistMiddleware = (req, res, next) => {
+  const clientIp = req.ip;
+  if (whitelist.includes(clientIp)) {
+    next();
+  } else {
+    res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
+  }
+};
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(helmet());
 
-// List endpoint api
+const allowedOrigins = ['https://www.ureshii.my.id', 'https://api.ureshii.my.id']; 
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('Domain kamu ditolak masuk ke server.'), false);
+    }
+    return callback(null, true);
+  }
+}));
+
+app.use(ipWhitelistMiddleware);
+
 const all = [
   '/buttons',
   '/datadonate',
@@ -75,7 +109,6 @@ const apiKeyMiddleware = (req, res, next) => {
   next();
 };
 
-// All router api
 app.use(apiKeyMiddleware);
 app.use('/buttons', buttonRoutes);
 app.use('/datadonate', donorDataRoutes);
