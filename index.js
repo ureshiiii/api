@@ -1,6 +1,7 @@
 import express from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import os from 'os';
 
 dotenv.config();
 
@@ -16,7 +17,9 @@ import responsesRoutes from './routes/responses.js';
 import usersRoutes from './routes/users.js';
 
 const apiKeyMiddleware = (req, res, next) => {
-  const key = req.query.key;
+  const key = req.path.split('/')[1];
+  req.url = req.url.replace(`/${key}`, ''); 
+
   if (!key) {
     return res.status(401).json({ message: 'API Key tidak diberikan.' });
   }
@@ -28,12 +31,66 @@ const apiKeyMiddleware = (req, res, next) => {
 
 app.use(morgan('dev'));
 app.use(express.json());
-app.use('/buttons', apiKeyMiddleware, buttonRoutes);
-app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
-app.use('/kategori', apiKeyMiddleware, kategoriRoutes);
-app.use('/layanan', apiKeyMiddleware, layananRoutes);
-app.use('/produk', apiKeyMiddleware, produkRoutes);
-app.use('/survey', apiKeyMiddleware, responsesRoutes);
+app.use(apiKeyMiddleware); 
+
+const getAllData = async () => {
+  try {
+    const [buttons, donorData, kategori, layanan, produk, responses, users] = await Promise.all([
+      Button.find({}), 
+      DonorData.find({}),
+      Kategori.find({}),
+      Layanan.find({}),
+      Produk.find({}),
+      Responses.find({}),
+      User.find({})
+    ]);
+
+    return { 
+      buttons: buttons.length > 0 ? true : false, 
+      donorData: donorData.length > 0 ? true : false,
+      kategori: kategori.length > 0 ? true : false,
+      layanan: layanan.length > 0 ? true : false,
+      produk: produk.length > 0 ? true : false,
+      responses: responses.length > 0 ? true : false,
+      users: users.length > 0 ? true : false 
+    };
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error; 
+  }
+};
+
+app.get('/', async (req, res) => {
+  try {
+    const allData = await getAllData();
+
+    const serverInfo = {
+      hostname: os.hostname(),
+      platform: os.platform(),
+      architecture: os.arch(),
+      cpuCores: os.cpus().length,
+      totalMemory: os.totalmem(),
+      freeMemory: os.freemem(),
+      uptime: os.uptime(),
+    };
+
+    res.json({
+      status: "Database nya aktif hann :3",
+      pesan: "Hacker jangan menyerang !!!",
+      data: allData,
+      serverInfo: serverInfo,
+    });
+  } catch (error) {
+    next(error); 
+  }
+});
+
+app.use('/buttons', buttonRoutes);
+app.use('/datadonate', donorDataRoutes);
+app.use('/kategori', kategoriRoutes);
+app.use('/layanan', layananRoutes);
+app.use('/produk', produkRoutes);
+app.use('/survey', responsesRoutes);
 app.use('/user', usersRoutes);
 
 app.use((err, req, res, next) => {
@@ -44,4 +101,3 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-                          
