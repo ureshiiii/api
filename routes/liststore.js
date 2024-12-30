@@ -120,12 +120,14 @@ router.post('/', async (req, res) => {
       idKategori = resultKategori.insertId;
     }
 
-    const values = items.map(item => [idKategori, item.nama_item, item.harga]);
-    await db.query(
-      'INSERT INTO itemStore (id_kategori, nama_item, harga) VALUES ?',
-      [values]
-    );
-
+    if (items.length > 0) {
+      const values = items.map(item => [idKategori, item.nama_item, item.harga]);
+      await db.query(
+        'INSERT INTO itemStore (id_kategori, nama_item, harga) VALUES ?',
+        [values]
+      );
+    }
+    
     await db.query('COMMIT');
     res.status(201).json({ message: 'Data list store berhasil ditambahkan.' });
   } catch (err) {
