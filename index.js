@@ -23,7 +23,7 @@ const apiKeyMiddleware = (req, res, next) => {
   if (!key) {
     return res.status(401).json({ message: 'API Key tidak diberikan.' });
   }
-  if (key !== process.env.API_KEY) {
+  if (key !== "lovefirsha") {
     return res.status(401).json({ message: 'API Key tidak valid.' });
   }
   next();
