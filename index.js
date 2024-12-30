@@ -21,14 +21,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const whitelist = ['185.27.134.168', '127.0.0.1', '66.33.60.129', '76.76.21.93']; 
+const whitelist = ['185.27.134.168', '66.33.60.129', '76.76.21.93']; 
 
 const ipWhitelistMiddleware = (req, res, next) => {
   const clientIp = req.ip;
   if (whitelist.includes(clientIp)) {
     next();
   } else {
-    res.status(403).json({ message: `IP kamu [ ${clientIp} ] ditolak masuk ke server` });
+    res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
   }
 };
 
