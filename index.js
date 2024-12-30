@@ -31,7 +31,7 @@ app.use(apiKeyMiddleware);
 const getAllData = async () => {
   try {
     const [buttons, donorData, kategori, layanan, produk, responses, users] = await Promise.all([
-      Button.find({}), 
+      Buttons.find({}), 
       DonorData.find({}),
       Kategori.find({}),
       Layanan.find({}),
