@@ -21,7 +21,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const whitelist = ['185.27.134.168', '66.33.60.129', '76.76.21.93']; 
+const whitelist = ['185.27.134.168', '127.0.0.1', '66.33.60.129', '76.76.21.93']; 
 
 const ipWhitelistMiddleware = (req, res, next) => {
   const clientIp = req.ip;
