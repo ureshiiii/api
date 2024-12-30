@@ -3,11 +3,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import os from 'os';
 
-dotenv.config();
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
+// Import semua file dari folder "routes"
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
 import kategoriRoutes from './routes/kategori.js';
@@ -16,10 +12,18 @@ import produkRoutes from './routes/produk.js';
 import responsesRoutes from './routes/responses.js';
 import usersRoutes from './routes/users.js';
 import storeRoutes from './routes/store.js';
+import liststoreRoutes from './routes/liststore.js';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
 
 app.use(morgan('dev'));
 app.use(express.json());
 
+// List endpoint api
 const all = [
   '/buttons',
   '/datadonate',
@@ -28,6 +32,8 @@ const all = [
   '/produk',
   '/survey',
   '/user',
+  '/store',
+  '/liststore',
 ];
 
 app.get('/', async (req, res) => {
@@ -70,6 +76,7 @@ const apiKeyMiddleware = (req, res, next) => {
   next();
 };
 
+// All router api
 app.use(apiKeyMiddleware); 
 app.use('/buttons', buttonRoutes);
 app.use('/datadonate', donorDataRoutes);
@@ -79,6 +86,7 @@ app.use('/produk', produkRoutes);
 app.use('/survey', responsesRoutes);
 app.use('/user', usersRoutes);
 app.use('/store', storeRoutes);
+app.use('/liststore', liststoreRoutes);
 
 app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Terjadi kesalahan di server.' });
