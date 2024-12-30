@@ -15,6 +15,7 @@ import layananRoutes from './routes/layanan.js';
 import produkRoutes from './routes/produk.js';
 import responsesRoutes from './routes/responses.js';
 import usersRoutes from './routes/users.js';
+import storeRoutes from './routes/store.js';
 
 app.use(morgan('dev'));
 app.use(express.json());
@@ -77,6 +78,7 @@ app.use('/layanan', layananRoutes);
 app.use('/produk', produkRoutes);
 app.use('/survey', responsesRoutes);
 app.use('/user', usersRoutes);
+app.use('/store', storeRoutes);
 
 app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Terjadi kesalahan di server.' });
