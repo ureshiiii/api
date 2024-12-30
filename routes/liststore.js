@@ -3,155 +3,57 @@ import db from '../config/database.js';
 
 const router = express.Router();
 
-// Get all list store data with pagination
-router.get('/', async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
+// --- Kategori Store ---
 
+// Get all categories for the specified user ID
+router.get('/:userId', async (req, res) => {
   try {
-    const [results] = await db.query(`
-      SELECT 
-          s.nama_store, 
-          k.nama_kategori, 
-          i.nama_item, 
-          i.harga
-      FROM 
-          store s
-      LEFT JOIN 
-          produkStore k ON s.id = k.id_store
-      LEFT JOIN 
-          itemStore i ON k.id = i.id_kategori
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
-
-    const [totalData] = await db.query(`
-      SELECT COUNT(*) AS total 
-      FROM store s 
-      LEFT JOIN produkStore k ON s.id = k.id_store 
-      LEFT JOIN itemStore i ON k.id = i.id_kategori
-    `);
-
-    const total = totalData[0]?.total || 0;
-
-    res.json({
-      data: results,
-      currentPage: page,
-      totalPages: Math.ceil(total / limit)
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Gagal mengambil data list store.', error: err.message });
-  }
-});
-
-// Get list store data by store ID with pagination
-router.get('/store/:id', async (req, res) => {
-  const idStore = req.params.id;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
-
-  try {
-    const [results] = await db.query(`
-      SELECT 
-          s.nama_store, 
-          k.nama_kategori, 
-          i.nama_item, 
-          i.harga
-      FROM 
-          store s
-      LEFT JOIN 
-          produkStore k ON s.id = k.id_store
-      LEFT JOIN 
-          itemStore i ON k.id = i.id_kategori
-      WHERE 
-          s.id = ?
-      LIMIT ? OFFSET ?
-    `, [idStore, limit, offset]);
-
-    const [totalData] = await db.query(`
-      SELECT COUNT(*) AS total 
-      FROM store s 
-      LEFT JOIN produkStore k ON s.id = k.id_store 
-      LEFT JOIN itemStore i ON k.id = i.id_kategori
-      WHERE s.id = ?
-    `, [idStore]);
-
-    const total = totalData[0]?.total || 0;
-
-    if (total === 0) {
-      return res.status(404).json({ message: 'ID store tidak ditemukan atau tidak memiliki data.' });
-    }
-
-    res.json({
-      data: results,
-      currentPage: page,
-      totalPages: Math.ceil(total / limit)
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Gagal mengambil data list store.', error: err.message });
-  }
-});
-
-// Add new list store data
-router.post('/', async (req, res) => {
-  const { id_store, nama_kategori, items } = req.body;
-
-  if (!id_store || !nama_kategori || !Array.isArray(items)) {
-    return res.status(400).json({ message: 'id_store, nama_kategori, dan items (array) wajib diisi.' });
-  }
-
-  try {
-    await db.query('START TRANSACTION');
-
-    const [existingKategori] = await db.query(
-      'SELECT id FROM produkStore WHERE id_store = ? AND nama_kategori = ?',
-      [id_store, nama_kategori]
+    const userId = req.params.userId;
+    const [results] = await db.query(
+      'SELECT * FROM kategoriStore WHERE user_id = ?',
+      [userId]
     );
-
-    let idKategori;
-    if (existingKategori.length > 0) {
-      idKategori = existingKategori[0].id;
-    } else {
-      const [resultKategori] = await db.query(
-        'INSERT INTO produkStore (id_store, nama_kategori) VALUES (?, ?)',
-        [id_store, nama_kategori]
-      );
-      idKategori = resultKategori.insertId;
-    }
-
-    if (items.length > 0) {
-      const values = items.map(item => [idKategori, item.nama_item, item.harga]);
-      await db.query(
-        'INSERT INTO itemStore (id_kategori, nama_item, harga) VALUES ?',
-        [values]
-      );
-    }
-
-    await db.query('COMMIT');
-    res.status(201).json({ message: 'Data list store berhasil ditambahkan.' });
+    res.json({ data: results });
   } catch (err) {
-    await db.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ message: 'Gagal menambahkan data list store.', error: err.message });
+    res.status(500).json({ message: 'Gagal mengambil data kategori.', error: err.message });
   }
 });
 
-// Update kategori by ID
-router.put('/kategori/:id', async (req, res) => {
-  const idKategori = req.params.id;
-  const { nama_kategori } = req.body;
-
-  if (!nama_kategori) {
-    return res.status(400).json({ message: 'nama_kategori wajib diisi.' });
+// Add new category for the specified user ID
+router.post('/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  const { name } = req.body;
+  if (!name) {
+    return res.status(400).json({ message: 'Nama kategori wajib diisi.' });
   }
 
   try {
     const [result] = await db.query(
-      'UPDATE produkStore SET nama_kategori = ? WHERE id = ?',
-      [nama_kategori, idKategori]
+      'INSERT INTO kategoriStore (user_id, name) VALUES (?, ?)',
+      [userId, name]
+    );
+    res.status(201).json({ message: 'Kategori berhasil ditambahkan.', id: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menambahkan kategori.', error: err.message });
+  }
+});
+
+// Update category by ID for the specified user ID
+router.put('/:userId/:id', async (req, res) => {
+  const userId = req.params.userId;
+  const categoryId = req.params.id;
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: 'Nama kategori wajib diisi.' });
+  }
+
+  try {
+    const [result] = await db.query(
+      'UPDATE kategoriStore SET name = ? WHERE id = ? AND user_id = ?',
+      [name, categoryId, userId]
     );
 
     if (result.affectedRows === 0) {
@@ -165,48 +67,115 @@ router.put('/kategori/:id', async (req, res) => {
   }
 });
 
-// Update item by ID
-router.put('/item/:id', async (req, res) => {
-  const idItem = req.params.id;
-  const { nama_item, harga } = req.body;
+// Delete category by ID for the specified user ID
+router.delete('/:userId/:id', async (req, res) => {
+  const userId = req.params.userId;
+  const categoryId = req.params.id;
 
-  if (!nama_item && !harga) {
+  try {
+    await db.query('START TRANSACTION');
+
+    await db.query('DELETE FROM itemStore WHERE category_id = ?', [categoryId]);
+
+    const [result] = await db.query(
+      'DELETE FROM kategoriStore WHERE id = ? AND user_id = ?',
+      [categoryId, userId]
+    );
+
+    await db.query('COMMIT');
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'ID kategori tidak ditemukan.' });
+    }
+
+    res.json({ message: 'Kategori berhasil dihapus.' });
+  } catch (err) {
+    await db.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menghapus kategori.', error: err.message });
+  }
+});
+
+
+// --- Item Store ---
+
+// Get all items for a category
+router.get('/:categoryId/items', async (req, res) => {
+  const categoryId = req.params.categoryId;
+  try {
+    const [results] = await db.query(
+      'SELECT * FROM itemStore WHERE category_id = ?',
+      [categoryId]
+    );
+    res.json({ data: results });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data item.', error: err.message });
+  }
+});
+
+// Add new item to a category
+router.post('/:categoryId/items', async (req, res) => {
+  const categoryId = req.params.categoryId;
+  const { name, price } = req.body;
+
+  if (!name || !price) {
+    return res.status(400).json({ message: 'Nama item dan harga wajib diisi.' });
+  }
+
+  try {
+    const [result] = await db.query(
+      'INSERT INTO itemStore (category_id, name, price) VALUES (?, ?, ?)',
+      [categoryId, name, price]
+    );
+    res.status(201).json({ message: 'Item berhasil ditambahkan.', id: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menambahkan item.', error: err.message });
+  }
+});
+
+// Update item by ID
+router.put('/items/:id', async (req, res) => {
+  const itemId = req.params.id;
+  const { name, price } = req.body;
+
+  if (!name && !price) {
     return res.status(400).json({ message: 'Tidak ada data yang diperbarui.' });
   }
 
   try {
     const [result] = await db.query(
-      'UPDATE itemStore SET nama_item = COALESCE(?, nama_item), harga = COALESCE(?, harga) WHERE id = ?',
-      [nama_item, harga, idItem]
+      'UPDATE itemStore SET name = COALESCE(?, name), price = COALESCE(?, price) WHERE id = ?',
+      [name, price, itemId]
     );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'ID item tidak ditemukan.' });
     }
 
-    res.json({ message: 'Data item berhasil diperbarui.' });
+    res.json({ message: 'Item berhasil diperbarui.' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Gagal memperbarui data item.', error: err.message });
+    res.status(500).json({ message: 'Gagal memperbarui item.', error: err.message });
   }
 });
 
 // Delete item by ID
-router.delete('/item/:id', async (req, res) => {
-  const idItem = req.params.id;
+router.delete('/items/:id', async (req, res) => {
+  const itemId = req.params.id;
 
   try {
-    const [result] = await db.query('DELETE FROM itemStore WHERE id = ?', [idItem]);
+    const [result] = await db.query('DELETE FROM itemStore WHERE id = ?', [itemId]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'ID item tidak ditemukan.' });
     }
 
-    res.json({ message: 'Data item berhasil dihapus.' });
+    res.json({ message: 'Item berhasil dihapus.' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Gagal menghapus data item.', error: err.message });
+    res.status(500).json({ message: 'Gagal menghapus item.', error: err.message });
   }
 });
 
 export default router;
-           
