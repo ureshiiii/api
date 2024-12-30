@@ -19,7 +19,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
 app.use(morgan('dev'));
 app.use(express.json());
 
@@ -53,10 +52,10 @@ app.get('/', async (req, res) => {
       model: `${os.cpus()[0].model}`,
       arsitektur: `${os.arch()}`,
       inti: `${os.cpus().length}`,
-      kecepatan: `${(os.cpus()[0].speed / 1000).toFixed(2)} GHz`,      
+      kecepatan: `${(os.cpus()[0].speed / 1000).toFixed(2)} GHz`,
       uptime: `${days} hari ${hours} jam ${minutes} menit`,
     };
-    
+
     res.json({
       status: "Database nya aktif hann :3",
       pesan: "Hacker jangan menyerang !",
@@ -70,14 +69,14 @@ app.get('/', async (req, res) => {
 
 const apiKeyMiddleware = (req, res, next) => {
   const key = req.path.split('/')[1];
-  req.url = req.url.replace(`/${key}`, ''); 
+  req.url = req.url.replace(`/${key}`, '');
   if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
   if (key !== process.env.API_KEY) return res.status(401).json({ message: 'API Key tidak valid.' });
   next();
 };
 
 // All router api
-app.use(apiKeyMiddleware); 
+app.use(apiKeyMiddleware);
 app.use('/buttons', buttonRoutes);
 app.use('/datadonate', donorDataRoutes);
 app.use('/kategori', kategoriRoutes);
