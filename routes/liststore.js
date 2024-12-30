@@ -135,6 +135,32 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Update kategori by ID
+router.put('/kategori/:id', async (req, res) => {
+  const idKategori = req.params.id;
+  const { nama_kategori } = req.body;
+
+  if (!nama_kategori) {
+    return res.status(400).json({ message: 'nama_kategori wajib diisi.' });
+  }
+
+  try {
+    const [result] = await db.query(
+      'UPDATE produkStore SET nama_kategori = ? WHERE id = ?',
+      [nama_kategori, idKategori]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'ID kategori tidak ditemukan.' });
+    }
+
+    res.json({ message: 'Kategori berhasil diperbarui.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal memperbarui kategori.' });
+  }
+});
+
 // Update list store data (update item by id)
 router.put('/item/:id', async (req, res) => {
   const idItem = req.params.id;
