@@ -28,31 +28,6 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(apiKeyMiddleware); 
 
-const getAllData = async () => {
-  try {
-    const [buttons, donorData, kategori, layanan, produk, responses, users] = await Promise.all([
-      Buttons.find({}), 
-      DonorData.find({}),
-      Kategori.find({}),
-      Layanan.find({}),
-      Produk.find({}),
-      Responses.find({}),
-      User.find({})
-    ]);
-    return { 
-      buttons: buttons.length > 0, 
-      donorData: donorData.length > 0,
-      kategori: kategori.length > 0,
-      layanan: layanan.length > 0,
-      produk: produk.length > 0,
-      responses: responses.length > 0,
-      users: users.length > 0 
-    };
-  } catch (error) {
-    throw error; 
-  }
-};
-
 const availableRoutes = [
   '/buttons',
   '/datadonate',
@@ -65,7 +40,6 @@ const availableRoutes = [
 
 app.get('/', async (req, res) => {
   try {
-    const allData = await getAllData();
     const serverInfo = {
       hostname: os.hostname(),
       platform: os.platform(),
@@ -78,7 +52,6 @@ app.get('/', async (req, res) => {
     res.json({
       status: "Database nya aktif hann :3",
       pesan: "Hacker jangan menyerang !!!",
-      data: allData,
       serverInfo: serverInfo,
       availableRoutes,
     });
