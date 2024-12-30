@@ -39,24 +39,21 @@ app.get('/', async (req, res) => {
     const hours = Math.floor((uptime % (60 * 60 * 24)) / (60 * 60));
     const minutes = Math.floor((uptime % (60 * 60)) / 60);
 
-    const serverInfo = `
-RAM: ${formatBytes(usedMem)} / ${formatBytes(totalMem)}
-FreeRAM: ${formatBytes(freeMem)}
-
-Model: ${os.cpus()[0].model}
-Arsitektur: ${os.arch()}
-Inti: ${os.cpus().length}
-Kecepatan: ${(os.cpus()[0].speed / 1000).toFixed(2)} GHz
-
-Platform: ${os.platform()}
-Versi: ${os.release()}
-Uptime: ${days} hari ${hours} jam ${minutes} menit
-`.trim();
-
+    const server = {
+      hostname: os.hostname(),
+      ram: `${formatBytes(usedMem)} / ${formatBytes(totalMem)}`,
+      freeram: `${formatBytes(freeMem)}`,
+      model: `${os.cpus()[0].model}`,
+      arsitektur: `${os.arch()}`,
+      inti: `${os.cpus().length}`,
+      kecepatan: `${(os.cpus()[0].speed / 1000).toFixed(2)} GHz`,      
+      uptime: `${days} hari ${hours} jam ${minutes} menit`,
+    };
+    
     res.json({
       status: "Database nya aktif hann :3",
       pesan: "Hacker jangan menyerang !",
-      server: serverInfo,
+      server: server,
       all,
     });
   } catch (error) {
