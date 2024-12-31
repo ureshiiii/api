@@ -19,14 +19,11 @@ import liststoreRoutes from './routes/liststore.js';
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Semua middleware
 app.use(morgan('dev')); 
 app.use(express.json()); 
 app.use(helmet());
-app.use(express.static(path.join(__dirname, 'public'))); 
 
 // Validasi rate limiting biar ga rentan ddos
 const limiter = rateLimit({
@@ -68,7 +65,7 @@ app.use(ipWhitelistMiddleware);
 
 // Validasi apikey
 const apiKeyMiddleware = (req, res, next) => {
-  const excludedPaths = ['/public', '/server-info']
+  const excludedPaths = ['/server-info']
   if (excludedPaths.some(path => req.path.startsWith(path))) {
     return next();
   }
