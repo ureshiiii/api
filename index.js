@@ -30,27 +30,6 @@ app.use(express.json());
 app.use(helmet());
 app.use(express.static(path.join(__dirname, 'public'))); 
 
-// Validasi rate limiting biar ga rentan ddos
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 menit
-  max: 100, // Batas 100 request per windowMs
-  standardHeaders: true, 
-  legacyHeaders: false, 
-});
-app.use(limiter);
-
-// Validasi ip
-const whitelist = ['185.27.134.168', '127.0.0.1', '66.33.60.129', '76.76.21.93']; 
-const ipWhitelistMiddleware = (req, res, next) => {
-  const clientIp = req.ip;
-  if (whitelist.includes(clientIp)) {
-    next();
-  } else {
-    res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
-  }
-};
-app.use(ipWhitelistMiddleware);
-
 // Validasi apikey
 const apiKeyMiddleware = (req, res, next) => {
   const excludedPaths = ['/public', '/server-info', '/website/list']; 
@@ -148,3 +127,4 @@ function formatBytes(bytes, decimals = 2) {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+                         
