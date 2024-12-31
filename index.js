@@ -31,6 +31,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+/*
 const apiKeyMiddleware = (req, res, next) => {
   const apiKeyPath = `/${process.env.API_KEY}/`; 
 
@@ -40,6 +41,8 @@ const apiKeyMiddleware = (req, res, next) => {
 
   next();
 };
+app.use(apiKeyMiddleware);
+*/
 
 app.get('/server-info', (req, res) => {
   try {
@@ -84,7 +87,6 @@ app.get('/server-info', (req, res) => {
   }
 });
 
-app.use(apiKeyMiddleware);
 app.use('/buttons', buttonRoutes);
 app.use('/datadonate', donorDataRoutes);
 app.use('/kategori', kategoriRoutes);
