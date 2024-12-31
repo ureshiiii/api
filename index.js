@@ -5,8 +5,6 @@ import os from 'os';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
@@ -70,7 +68,7 @@ app.use(ipWhitelistMiddleware);
 
 // Validasi apikey
 const apiKeyMiddleware = (req, res, next) => {
-  const excludedPaths = ['/public', '/server-info', '/website/list']; 
+  const excludedPaths = ['/public', '/server-info']
   if (excludedPaths.some(path => req.path.startsWith(path))) {
     return next();
   }
@@ -85,10 +83,6 @@ const apiKeyMiddleware = (req, res, next) => {
 
 app.use(apiKeyMiddleware);
 
-// All route disini
-app.get('/website/list', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 app.use('/buttons', buttonRoutes);
 app.use('/datadonate', donorDataRoutes);
 app.use('/kategori', kategoriRoutes);
