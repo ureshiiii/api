@@ -5,7 +5,6 @@ import os from 'os';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
-import path from 'path'; 
 
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
@@ -38,11 +37,6 @@ const limiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-});
-
-app.use(express.static(path.resolve('./')));
-app.get('/', (req, res) => {
-  res.sendFile(path.resolve('index.html'));
 });
 
 app.use(morgan('dev'));
@@ -144,4 +138,4 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-                          }
+    }
