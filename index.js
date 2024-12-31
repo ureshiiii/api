@@ -70,27 +70,20 @@ const apiKeyMiddleware = (req, res, next) => {
     return next();
   }
 
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    return res.status(401).json({ message: 'API Key tidak diberikan.' });
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  if (token !== process.env.API_KEY) {
-    return res.status(401).json({ message: 'API Key tidak valid.' });
-  }
+  const key = req.path.split('/')[1];
+  req.url = req.url.replace(`/${key}`, '');
+  if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
+  if (key !== process.env.API_KEY) return res.status(401).json({ message: 'API Key tidak valid.' });
 
   next();
 };
+
 app.use(apiKeyMiddleware);
 
 // All route disini
 app.get('/website/list/:id_user', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
 app.use('/buttons', buttonRoutes);
 app.use('/datadonate', donorDataRoutes);
 app.use('/kategori', kategoriRoutes);
