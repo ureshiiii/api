@@ -5,6 +5,8 @@ import os from 'os';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 
+dotenv.config();
+
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
 import kategoriRoutes from './routes/kategori.js';
@@ -15,7 +17,6 @@ import usersRoutes from './routes/users.js';
 import storeRoutes from './routes/store.js';
 import liststoreRoutes from './routes/liststore.js';
 
-dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -34,16 +35,16 @@ app.use(limiter);
 const apiKeyMiddleware = (req, res, next) => {
   try {
     const apiKey = req.path.split('/')[1];
-    const validApiKey = process.env.API_KEY;
+    const validApiKey = "lovefirsha"
 
     if (!apiKey) {
       return res.status(400).json({ message: 'API Key tidak ditemukan dalam request.' });
     }
 
-    if (apiKey === validApiKey) {
-      next();
-    } else {
+    if (apiKey != validApiKey) {
       res.status(401).json({ message: 'API Key tidak valid.' });
+    } else {
+      next();
     }
 
   } catch (error) {
