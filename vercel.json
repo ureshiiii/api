@@ -18,11 +18,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "www.ureshii.my.id, ureshii.my.id, api.ureshii.my.id, list-store.ureshii.my.id"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET"
+          "value": "*"
         }
       ]
     }
