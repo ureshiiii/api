@@ -84,9 +84,8 @@ app.get('/server-info', async (req, res) => {
       ram: `${formatBytes(usedMem)} / ${formatBytes(totalMem)}`,
       freeram: `${formatBytes(freeMem)}`,
       model: `${os.cpus()[0].model}`,
-      arsitektur: `${os.arch()}`,
+      arsitektur: `${os.arch()} Core`,
       inti: `${os.cpus().length}`,
-      kecepatan: `${(os.cpus()[0].speed / 1000).toFixed(2)} GHz`,
       uptime: `${days} hari ${hours} jam ${minutes} menit`,
     };
 
@@ -115,18 +114,7 @@ const apiKeyMiddleware = (req, res, next) => {
   next();
 };
 
-const contentTypeMiddleware = (req, res, next) => {
-  if (req.accepts('html')) {
-    res.sendFile(path.join(__dirname, 'public', 'index.html')); 
-  } else if (req.accepts('json')) {
-    next(); 
-  } else {
-    next();
-  }
-};
-
 app.use(apiKeyMiddleware);
-app.use(contentTypeMiddleware)
 app.use('/buttons', buttonRoutes);
 app.use('/datadonate', donorDataRoutes);
 app.use('/kategori', kategoriRoutes);
