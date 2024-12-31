@@ -69,7 +69,8 @@ const all = [
   '/liststore',
 ];
 
-app.get('/', async (req, res) => {
+// Ubah path menjadi /server-info
+app.get('/server-info', async (req, res) => { 
   try {
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
@@ -102,6 +103,7 @@ app.get('/', async (req, res) => {
 });
 
 const apiKeyMiddleware = (req, res, next) => {
+  // Lewati middleware jika request ditujukan ke /public
   if (req.path.startsWith('/public')) {
     return next();
   }
@@ -142,4 +144,4 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
+               }
