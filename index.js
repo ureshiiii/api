@@ -69,7 +69,6 @@ const all = [
   '/liststore',
 ];
 
-// Ubah path menjadi /server-info
 app.get('/server-info', async (req, res) => { 
   try {
     const totalMem = os.totalmem();
@@ -103,19 +102,31 @@ app.get('/server-info', async (req, res) => {
 });
 
 const apiKeyMiddleware = (req, res, next) => {
-  // Lewati middleware jika request ditujukan ke /public
-  if (req.path.startsWith('/public')) {
+  if (req.path.startsWith('/public') || req.path.startsWith('/server-info')) {
     return next();
   }
 
   const key = req.path.split('/')[1];
   req.url = req.url.replace(`/${key}`, '');
+
   if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
   if (key !== process.env.API_KEY) return res.status(401).json({ message: 'API Key tidak valid.' });
+
   next();
 };
 
+const contentTypeMiddleware = (req, res, next) => {
+  if (req.accepts('html')) {
+    res.sendFile(path.join(__dirname, 'public', 'index.html')); 
+  } else if (req.accepts('json')) {
+    next(); 
+  } else {
+    next();
+  }
+};
+
 app.use(apiKeyMiddleware);
+app.use(contentTypeMiddleware)
 app.use('/buttons', buttonRoutes);
 app.use('/datadonate', donorDataRoutes);
 app.use('/kategori', kategoriRoutes);
@@ -144,4 +155,4 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-               }
+}
