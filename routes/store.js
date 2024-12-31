@@ -6,7 +6,7 @@ const router = express.Router();
 // Get all stores data
 router.get('/', async (req, res) => {
   try {
-    const [results] = await db.query('SELECT id, username, thumbnail, nama_store, foto_profile, deskripsi FROM store');
+    const [results] = await db.query('SELECT id, username, thumbnail, nama_store, foto_profile, deskripsi, nomor FROM store');
     res.json(results);
   } catch (err) {
     console.error(err);
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const idStore = req.params.id;
   try {
-    const [results] = await db.query('SELECT id, username, thumbnail, nama_store, foto_profile, deskripsi FROM store WHERE id = ?', [idStore]);
+    const [results] = await db.query('SELECT id, username, thumbnail, nama_store, foto_profile, deskripsi, nomor FROM store WHERE id = ?', [idStore]);
     if (results.length === 0) {
       return res.status(404).json({ message: 'ID store tidak ditemukan.' });
     }
@@ -37,13 +37,18 @@ router.post('/', async (req, res) => {
   newStore.foto_profile = newStore.foto_profile || 'https://via.placeholder.com/500';
   newStore.deskripsi = newStore.deskripsi || 'Kami adalah store online yang terpercaya oleh banyak pelanggan. Jadi sudah pasti aman';
 
-  if (!newStore.username || !newStore.password || !newStore.nama_store) {
-    return res.status(400).json({ message: 'Username, password, dan nama store wajib diisi.' });
+  if (!newStore.username || !newStore.password || !newStore.nama_store || !newStore.nomor) {
+    return res.status(400).json({ message: 'Username, password, nama store, dan nomor wajib diisi.' });
   }
+
+  if (!/^628\d{7,12}$/.test(newStore.nomor)) {
+    return res.status(400).json({ message: 'Nomor harus dimulai dengan 628 dan tidak boleh mengandung spasi atau tanda plus (+).' });
+  }
+
   try {
     const [result] = await db.query(
-      'INSERT INTO store (username, password, thumbnail, nama_store, foto_profile, deskripsi) VALUES (?, ?, ?, ?, ?, ?)',
-      [newStore.username, newStore.password, newStore.thumbnail, newStore.nama_store, newStore.foto_profile, newStore.deskripsi]
+      'INSERT INTO store (username, password, thumbnail, nama_store, foto_profile, deskripsi, nomor) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [newStore.username, newStore.password, newStore.thumbnail, newStore.nama_store, newStore.foto_profile, newStore.deskripsi, newStore.nomor]
     );
     res.status(201).json({ message: 'Data store berhasil ditambahkan.', id: result.insertId });
   } catch (err) {
@@ -56,10 +61,12 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const idStore = req.params.id;
   const updatedStore = req.body;
+
   try {
     let query = 'UPDATE store SET ';
     let values = [];
     let fieldCount = 0;
+
     if (updatedStore.username) {
       query += `username = ?, `;
       values.push(updatedStore.username);
@@ -85,18 +92,29 @@ router.put('/:id', async (req, res) => {
       values.push(updatedStore.foto_profile);
       fieldCount++;
     }
-    if (updatedStore.deskripsi) { 
+    if (updatedStore.deskripsi) {
       query += `deskripsi = ?, `;
       values.push(updatedStore.deskripsi);
       fieldCount++;
     }
+    if (updatedStore.nomor) {
+      if (!/^628\d{7,12}$/.test(updatedStore.nomor)) {
+        return res.status(400).json({ message: 'Nomor harus dimulai dengan 628 dan tidak boleh mengandung spasi atau tanda plus (+).' });
+      }
+      query += `nomor = ?, `;
+      values.push(updatedStore.nomor);
+      fieldCount++;
+    }
+
     if (fieldCount > 0) {
-      query = query.slice(0, -2); 
+      query = query.slice(0, -2);
     } else {
       return res.status(400).json({ message: 'Tidak ada data yang diperbarui.' });
     }
+
     query += ` WHERE id = ?`;
     values.push(idStore);
+
     const [result] = await db.query(query, values);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'ID store tidak ditemukan.' });
