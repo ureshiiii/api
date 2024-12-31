@@ -102,6 +102,10 @@ app.get('/', async (req, res) => {
 });
 
 const apiKeyMiddleware = (req, res, next) => {
+  if (req.path.startsWith('/public')) {
+    return next();
+  }
+
   const key = req.path.split('/')[1];
   req.url = req.url.replace(`/${key}`, '');
   if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
@@ -138,4 +142,4 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-    }
+}
