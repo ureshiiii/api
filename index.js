@@ -38,6 +38,7 @@ const limiter = rateLimit({
   legacyHeaders: false, 
 });
 app.use(limiter);
+
 /*
 // Validasi cords
 const allowedOrigins = ['https://www.ureshii.my.id', 'https://list-store.ureshii.my.id', 'https://api.ureshii.my.id/website/list', 'https://api.ureshii.my.id']; 
@@ -63,8 +64,9 @@ const ipWhitelistMiddleware = (req, res, next) => {
     res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
   }
 };
-*/
 app.use(ipWhitelistMiddleware);
+*/
+
 // Validasi apikey
 const apiKeyMiddleware = (req, res, next) => {
   const excludedPaths = ['/public', '/server-info', '/website/list/']; 
