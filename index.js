@@ -38,8 +38,6 @@ const apiKeyMiddleware = (req, res, next) => {
   next();
 };
 
-app.use(apiKeyMiddleware);
-
 app.get('/server-info', (req, res) => {
   try {
     const totalMem = os.totalmem();
@@ -83,7 +81,7 @@ app.get('/server-info', (req, res) => {
   }
 });
 
-
+app.use(apiKeyMiddleware);
 app.use('/buttons', buttonRoutes);
 app.use('/datadonate', donorDataRoutes);
 app.use('/kategori', kategoriRoutes);
