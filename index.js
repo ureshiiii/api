@@ -39,6 +39,11 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
+app.use(express.static(path.resolve('./')));
+app.get('/', (req, res) => {
+  res.sendFile(path.resolve('index.html'));
+});
+
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(helmet());
@@ -101,10 +106,6 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.get('/index.html', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-});
-
 const apiKeyMiddleware = (req, res, next) => {
   const key = req.path.split('/')[1];
   req.url = req.url.replace(`/${key}`, '');
@@ -142,4 +143,4 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-  }
+                          }
