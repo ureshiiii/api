@@ -101,7 +101,7 @@ app.get('/server-info', async (req, res) => {
 });
 
 const apiKeyMiddleware = (req, res, next) => {
-  if (req.path.startsWith('/public') || req.path.startsWith('/server-info')) {
+  if (req.path.startsWith('/public') || req.path.startsWith('/') || req.path.startsWith('/server-info')) {
     return next();
   }
 
@@ -126,7 +126,8 @@ app.use('/store', storeRoutes);
 app.use('/liststore', liststoreRoutes);
 
 app.use((err, req, res, next) => {
-  res.status(500).json({ message: 'Terjadi kesalahan di server.' });
+  console.error(err.stack);
+  res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.stack });
 });
 
 app.listen(PORT, () => {
@@ -143,4 +144,4 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
+        }
