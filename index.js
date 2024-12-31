@@ -5,6 +5,8 @@ import os from 'os';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
@@ -17,12 +19,41 @@ import storeRoutes from './routes/store.js';
 import liststoreRoutes from './routes/liststore.js';
 
 dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 3000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// Semua middleware
+app.use(morgan('dev')); 
+app.use(express.json()); 
+app.use(helmet());
+app.use(express.static(path.join(__dirname, 'public'))); 
+
+// Validasi rate limiting biar ga rentan ddos
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 menit
+  max: 100, // Batas 100 request per windowMs
+  standardHeaders: true, 
+  legacyHeaders: false, 
+});
+app.use(limiter);
+// Validasi cords
+const allowedOrigins = ['https://www.ureshii.my.id', 'https://api.ureshii.my.id']; 
+app.use(cors({
+  origin: function (origin, callback) {
+    if (process.env.NODE_ENV === 'development') { 
+      return callback(null, true); 
+    }
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('Domain kamu ditolak masuk ke server.'), false);
+    }
+    return callback(null, true);
+  }
+}));
+// Validadi ip
 const whitelist = ['185.27.134.168', '127.0.0.1', '66.33.60.129', '76.76.21.93']; 
-
 const ipWhitelistMiddleware = (req, res, next) => {
   const clientIp = req.ip;
   if (whitelist.includes(clientIp)) {
@@ -31,32 +62,46 @@ const ipWhitelistMiddleware = (req, res, next) => {
     res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
   }
 };
+app.use(ipWhitelistMiddleware);
+// Validasi apikey
+const apiKeyMiddleware = (req, res, next) => {
+  const excludedPaths = ['/public', '/', '/server-info', '/website/list/']; 
+  if (excludedPaths.some(path => req.path.startsWith(path))) {
+    return next();
+  }
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ message: 'API Key tidak diberikan.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  if (token !== process.env.API_KEY) {
+    return res.status(401).json({ message: 'API Key tidak valid.' });
+  }
+
+  next();
+};
+app.use(apiKeyMiddleware);
+
+// All route disini
+app.get('/website/list/:id_user', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.use(morgan('dev'));
-app.use(express.json());
-app.use(helmet());
+app.use('/buttons', buttonRoutes);
+app.use('/datadonate', donorDataRoutes);
+app.use('/kategori', kategoriRoutes);
+app.use('/layanan', layananRoutes);
+app.use('/produk', produkRoutes);
+app.use('/survey', responsesRoutes);
+app.use('/user', usersRoutes);
+app.use('/store', storeRoutes);
+app.use('/liststore', liststoreRoutes);
 
-const allowedOrigins = ['https://www.ureshii.my.id', 'https://api.ureshii.my.id']; 
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('Domain kamu ditolak masuk ke server.'), false);
-    }
-    return callback(null, true);
-  }
-}));
-
-app.use(ipWhitelistMiddleware);
-
+// Server info biar keren
 const all = [
   '/buttons',
   '/datadonate',
@@ -68,7 +113,6 @@ const all = [
   '/store',
   '/liststore',
 ];
-
 app.get('/server-info', async (req, res) => { 
   try {
     const totalMem = os.totalmem();
@@ -100,38 +144,9 @@ app.get('/server-info', async (req, res) => {
   }
 });
 
-const apiKeyMiddleware = (req, res, next) => {
-  if (req.path.startsWith('/public') || req.path.startsWith('/') || req.path.startsWith('/server-info')) {
-    return next();
-  }
-
-  const key = req.path.split('/')[1];
-  req.url = req.url.replace(`/${key}`, '');
-
-  if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
-  if (key !== process.env.API_KEY) return res.status(401).json({ message: 'API Key tidak valid.' });
-
-  next();
-};
-
-app.use(apiKeyMiddleware);
-app.use('/buttons', buttonRoutes);
-app.use('/datadonate', donorDataRoutes);
-app.use('/kategori', kategoriRoutes);
-app.use('/layanan', layananRoutes);
-app.use('/produk', produkRoutes);
-app.use('/survey', responsesRoutes);
-app.use('/user', usersRoutes);
-app.use('/store', storeRoutes);
-app.use('/liststore', liststoreRoutes);
-
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.stack });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.message }); 
 });
 
 function formatBytes(bytes, decimals = 2) {
@@ -144,4 +159,8 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
+}
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
