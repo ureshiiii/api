@@ -23,15 +23,16 @@ router.get('/:userId', async (req, res) => {
 // Add new category for the specified user ID
 router.post('/:userId', async (req, res) => {
   const userId = req.params.userId;
-  const { name } = req.body;
-  if (!name) {
-    return res.status(400).json({ message: 'Nama kategori wajib diisi.' });
+  const { name, deskripsi_kategori } = req.body;
+
+  if (!name || !deskripsi_kategori) {
+    return res.status(400).json({ message: 'Nama dan deskripsi kategori wajib diisi.' });
   }
 
   try {
     const [result] = await db.query(
-      'INSERT INTO kategoriStore (user_id, name) VALUES (?, ?)',
-      [userId, name]
+      'INSERT INTO kategoriStore (user_id, name, deskripsi_kategori) VALUES (?, ?, ?)',
+      [userId, name, deskripsi_kategori] // Tambahkan deskripsi_kategori di query
     );
     res.status(201).json({ message: 'Kategori berhasil ditambahkan.', id: result.insertId });
   } catch (err) {
@@ -44,16 +45,16 @@ router.post('/:userId', async (req, res) => {
 router.put('/:userId/:id', async (req, res) => {
   const userId = req.params.userId;
   const categoryId = req.params.id;
-  const { name } = req.body;
+  const { name, deskripsi_kategori } = req.body;
 
-  if (!name) {
-    return res.status(400).json({ message: 'Nama kategori wajib diisi.' });
+  if (!name && !deskripsi_kategori) {
+    return res.status(400).json({ message: 'Minimal nama atau deskripsi kategori harus diisi.' });
   }
 
   try {
     const [result] = await db.query(
-      'UPDATE kategoriStore SET name = ? WHERE id = ? AND user_id = ?',
-      [name, categoryId, userId]
+      'UPDATE kategoriStore SET name = COALESCE(?, name), deskripsi_kategori = COALESCE(?, deskripsi_kategori) WHERE id = ? AND user_id = ?',
+      [name, deskripsi_kategori, categoryId, userId]
     );
 
     if (result.affectedRows === 0) {

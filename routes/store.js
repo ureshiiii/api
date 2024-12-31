@@ -6,7 +6,7 @@ const router = express.Router();
 // Get all stores data
 router.get('/', async (req, res) => {
   try {
-    const [results] = await db.query('SELECT id, username, thumbnail, nama_store, foto_profile FROM store'); // Kolom password dihapus
+    const [results] = await db.query('SELECT id, username, thumbnail, nama_store, foto_profile, deskripsi FROM store');
     res.json(results);
   } catch (err) {
     console.error(err);
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const idStore = req.params.id;
   try {
-    const [results] = await db.query('SELECT id, username, thumbnail, nama_store, foto_profile FROM store WHERE id = ?', [idStore]); // Kolom password dihapus
+    const [results] = await db.query('SELECT id, username, thumbnail, nama_store, foto_profile, deskripsi FROM store WHERE id = ?', [idStore]);
     if (results.length === 0) {
       return res.status(404).json({ message: 'ID store tidak ditemukan.' });
     }
@@ -32,13 +32,18 @@ router.get('/:id', async (req, res) => {
 // Add new store data
 router.post('/', async (req, res) => {
   const newStore = req.body;
+
+  newStore.thumbnail = newStore.thumbnail || 'https://via.placeholder.com/1280x720';
+  newStore.foto_profile = newStore.foto_profile || 'https://via.placeholder.com/500';
+  newStore.deskripsi = newStore.deskripsi || 'Kami adalah store online yang terpercaya oleh banyak pelanggan. Jadi sudah pasti aman';
+
   if (!newStore.username || !newStore.password || !newStore.nama_store) {
-    return res.status(400).json({ message: 'Input username, password, dan nama store wajib diisi.' });
+    return res.status(400).json({ message: 'Username, password, dan nama store wajib diisi.' });
   }
   try {
     const [result] = await db.query(
-      'INSERT INTO store (username, password, thumbnail, nama_store, foto_profile) VALUES (?, ?, ?, ?, ?)',
-      [newStore.username, newStore.password, newStore.thumbnail, newStore.nama_store, newStore.foto_profile]
+      'INSERT INTO store (username, password, thumbnail, nama_store, foto_profile, deskripsi) VALUES (?, ?, ?, ?, ?, ?)',
+      [newStore.username, newStore.password, newStore.thumbnail, newStore.nama_store, newStore.foto_profile, newStore.deskripsi]
     );
     res.status(201).json({ message: 'Data store berhasil ditambahkan.', id: result.insertId });
   } catch (err) {
@@ -78,6 +83,11 @@ router.put('/:id', async (req, res) => {
     if (updatedStore.foto_profile) {
       query += `foto_profile = ?, `;
       values.push(updatedStore.foto_profile);
+      fieldCount++;
+    }
+    if (updatedStore.deskripsi) { 
+      query += `deskripsi = ?, `;
+      values.push(updatedStore.deskripsi);
       fieldCount++;
     }
     if (fieldCount > 0) {
