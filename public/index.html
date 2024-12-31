@@ -73,7 +73,7 @@
     const storeNameText = document.getElementById('store-name-text');
 
     const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('id');
+    const userId = urlParams.get('id') || '3';
 
     if (!userId) {
       displayError(kategoriContainer, 'User ID tidak valid.');
