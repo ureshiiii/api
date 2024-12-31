@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import os from 'os';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import cors from 'cors';
 
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
@@ -33,12 +32,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 const apiKeyMiddleware = (req, res, next) => {
-  const key = req.params.key;
+  const key = req.path.split('/')[1];
   if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
   if (key !== process.env.API_KEY) return res.status(401).json({ message: 'API Key tidak valid.' });
   next();
 };
 
+app.use(apiKeyMiddleware);
 
 app.get('/server-info', (req, res) => {
   try {
@@ -83,15 +83,16 @@ app.get('/server-info', (req, res) => {
   }
 });
 
-app.use('/:key/buttons', apiKeyMiddleware, buttonRoutes);
-app.use('/:key/datadonate', apiKeyMiddleware, donorDataRoutes);
-app.use('/:key/kategori', apiKeyMiddleware, kategoriRoutes);
-app.use('/:key/layanan', apiKeyMiddleware, layananRoutes);
-app.use('/:key/produk', apiKeyMiddleware, produkRoutes);
-app.use('/:key/survey', apiKeyMiddleware, responsesRoutes);
-app.use('/:key/user', apiKeyMiddleware, usersRoutes);
-app.use('/:key/store', apiKeyMiddleware, storeRoutes);
-app.use('/:key/liststore', apiKeyMiddleware, liststoreRoutes);
+
+app.use('/buttons', buttonRoutes);
+app.use('/datadonate', donorDataRoutes);
+app.use('/kategori', kategoriRoutes);
+app.use('/layanan', layananRoutes);
+app.use('/produk', produkRoutes);
+app.use('/survey', responsesRoutes);
+app.use('/user', usersRoutes);
+app.use('/store', storeRoutes);
+app.use('/liststore', liststoreRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
