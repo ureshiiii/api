@@ -31,20 +31,18 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+const allowedOrigins = ['www.ureshii.my.id', 'list-store.ureshii.my.id', 'api.ureshii.my.id']; 
+app.use(cors({
+  origin: function (origin, callback) {
+    const originDomain = new URL(origin).hostname; 
 
-const allowedDomains = [/^(https?:\/\/)?(www\.)?ureshii\.my\.id$/]; 
-
-const accessControlMiddleware = (req, res, next) => {
-  const origin = req.headers.origin;
-  const isAllowed = allowedDomains.some(regex => regex.test(origin));
-  if (isAllowed) {
-    next(); 
-  } else {
-    res.status(403).json({ message: 'Domain kamu ditolak masuk ke server.' });
+    if (!originDomain) return callback(null, true);
+    if (allowedOrigins.indexOf(originDomain) === -1) {
+      return callback(new Error('Domain kamu ditolak masuk ke server.'), false);
+    }
+    return callback(null, true);
   }
-};
-
-app.use(accessControlMiddleware);
+}));
 
 const apiKeyMiddleware = (req, res, next) => {
   const key = req.params.key;
