@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import os from 'os';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import cors from 'cors';
 
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
@@ -20,89 +19,47 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Semua middleware
-app.use(morgan('dev')); 
-app.use(express.json()); 
+app.use(morgan('dev'));
+app.use(express.json());
 app.use(helmet());
 
-// Validasi rate limiting biar ga rentan ddos
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 menit
-  max: 100, // Batas 100 request per windowMs
-  standardHeaders: true, 
-  legacyHeaders: false, 
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
 
-// Validasi cords
-const allowedOrigins = ['www.ureshii.my.id', 'list-store.ureshii.my.id', 'api.ureshii.my.id']; 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (process.env.NODE_ENV === 'development') { 
-      return callback(null, true); 
-    }
 
-    const originDomain = new URL(origin).hostname; 
+const allowedDomains = ['www.ureshii.my.id', 'list-store.ureshii.my.id', 'api.ureshii.my.id'];
 
-    if (!originDomain) return callback(null, true);
-    if (allowedOrigins.indexOf(originDomain) === -1) {
-      return callback(new Error('Domain kamu ditolak masuk ke server.'), false);
+const accessControlMiddleware = (req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedDomains.includes(origin)) { 
+    const whitelist = ['185.27.134.168', '127.0.0.1', '66.33.60.129', '76.76.21.93'];
+    const clientIp = req.ip;
+    if (whitelist.includes(clientIp)) {
+      next();
+    } else {
+      res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
     }
-    return callback(null, true);
-  }
-}));
-// Validasi ip
-const whitelist = ['185.27.134.168', '127.0.0.1', '66.33.60.129', '76.76.21.93']; 
-const ipWhitelistMiddleware = (req, res, next) => {
-  const clientIp = req.ip;
-  if (whitelist.includes(clientIp)) {
-    next();
   } else {
-    res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
+    res.status(403).json({ message: 'Domain kamu ditolak masuk ke server.' });
   }
 };
-app.use(ipWhitelistMiddleware);
 
-// Validasi apikey
+app.use(accessControlMiddleware);
+
 const apiKeyMiddleware = (req, res, next) => {
-  const excludedPaths = ['/server-info']
-  if (excludedPaths.some(path => req.path.startsWith(path))) {
-    return next();
-  }
-
-  const key = req.path.split('/')[1];
-  req.url = req.url.replace(`/${key}`, '');
+  const key = req.params.key;
   if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
   if (key !== process.env.API_KEY) return res.status(401).json({ message: 'API Key tidak valid.' });
-
   next();
 };
 
-app.use(apiKeyMiddleware);
 
-app.use('/buttons', buttonRoutes);
-app.use('/datadonate', donorDataRoutes);
-app.use('/kategori', kategoriRoutes);
-app.use('/layanan', layananRoutes);
-app.use('/produk', produkRoutes);
-app.use('/survey', responsesRoutes);
-app.use('/user', usersRoutes);
-app.use('/store', storeRoutes);
-app.use('/liststore', liststoreRoutes);
-
-// Server info biar keren
-const all = [
-  '/buttons',
-  '/datadonate',
-  '/kategori',
-  '/layanan',
-  '/produk',
-  '/survey',
-  '/user',
-  '/store',
-  '/liststore',
-];
-app.get('/server-info', async (req, res) => { 
+app.get('/server-info', (req, res) => {
   try {
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
@@ -122,23 +79,45 @@ app.get('/server-info', async (req, res) => {
       uptime: `${days} hari ${hours} jam ${minutes} menit`,
     };
 
+    const allRoutes = [
+      '/buttons',
+      '/datadonate',
+      '/kategori',
+      '/layanan',
+      '/produk',
+      '/survey',
+      '/user',
+      '/store',
+      '/liststore',
+    ];
+
     res.json({
       status: "Database nya aktif hann :3",
       pesan: "Hacker jangan menyerang !",
       server: server,
-      all,
+      all: allRoutes,
     });
   } catch (error) {
     res.status(500).json({ message: "Gagal mengambil data.", error: error.message });
   }
 });
 
+app.use('/:key/buttons', apiKeyMiddleware, buttonRoutes);
+app.use('/:key/datadonate', apiKeyMiddleware, donorDataRoutes);
+app.use('/:key/kategori', apiKeyMiddleware, kategoriRoutes);
+app.use('/:key/layanan', apiKeyMiddleware, layananRoutes);
+app.use('/:key/produk', apiKeyMiddleware, produkRoutes);
+app.use('/:key/survey', apiKeyMiddleware, responsesRoutes);
+app.use('/:key/user', apiKeyMiddleware, usersRoutes);
+app.use('/:key/store', apiKeyMiddleware, storeRoutes);
+app.use('/:key/liststore', apiKeyMiddleware, liststoreRoutes);
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  if (err.name === 'ValidationError') { 
+  if (err.name === 'ValidationError') {
     return res.status(400).json({ errors: err.errors });
   }
-  res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.message }); 
+  res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.message });
 });
 
 function formatBytes(bytes, decimals = 2) {
