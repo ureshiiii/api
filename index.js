@@ -32,9 +32,12 @@ const limiter = rateLimit({
 app.use(limiter);
 
 const apiKeyMiddleware = (req, res, next) => {
-  const key = req.path.split('/')[1];
-  if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
-  if (key !== process.env.API_KEY) return res.status(401).json({ message: 'API Key tidak valid.' });
+  const apiKeyPath = `/${process.env.API_KEY}/`; 
+
+  if (!req.path.startsWith(apiKeyPath)) {
+    return res.status(401).json({ message: 'API Key tidak diberikan.' });
+  }
+
   next();
 };
 
