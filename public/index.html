@@ -73,14 +73,14 @@
     const storeNameText = document.getElementById('store-name-text');
 
     const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('id') || '3';
+    const userId = urlParams.get('id'); 
 
-    if (!userId) {
-      displayError(kategoriContainer, 'User ID tidak valid.');
-      displayError(itemContainer, 'User ID tidak valid.');
-    } else {
+    if (userId && !isNaN(userId)) {
       fetchStore(userId);
       fetchKategori(userId);
+    } else {
+      displayError(kategoriContainer, 'User ID tidak valid.');
+      displayError(itemContainer, 'User ID tidak valid.');
     }
 
     function displayError(container, message) {
@@ -95,7 +95,11 @@
       try {
         const response = await fetch(`/lovefirsha/store/${userId}`);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          if (response.status === 404) { 
+            throw new Error('Toko tidak ditemukan.'); 
+          } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
         }
         const data = await response.json();
         renderStore(data);
@@ -157,12 +161,16 @@
       try {
         const response = await fetch(`/lovefirsha/liststore/${categoryId}/items`);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          if (response.status === 404) { 
+            throw new Error('Kategori tidak ditemukan.'); 
+          } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
         }
         const data = await response.json();
         renderItems(data.data);
       } catch (error) {
-        displayError(itemContainer, `Gagal memuat item: ${error.message}`);
+        displayError(itemContainer, `Gagal memuat item: ${error.message}`); 
         console.error('Error fetching items:', error);
       }
     }
@@ -185,4 +193,4 @@
     }
   </script>
 </body>
-</html>
+  </html>
