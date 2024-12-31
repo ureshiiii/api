@@ -60,7 +60,7 @@ const ipWhitelistMiddleware = (req, res, next) => {
   if (whitelist.includes(clientIp)) {
     next();
   } else {
-    res.json({ message: `IP lu [ ${clientIp} ] ditolak masuk ke server jir 😂` });
+    res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
   }
 };
 app.use(ipWhitelistMiddleware);
@@ -74,8 +74,8 @@ const apiKeyMiddleware = (req, res, next) => {
 
   const key = req.path.split('/')[1];
   req.url = req.url.replace(`/${key}`, '');
-  if (!key) return res.json({ message: 'Masukin parameter apikey lah dongo. Kalo gatau gausa coba coba fetch ya 😂' });
-  if (key !== process.env.API_KEY) return res.json({ message: 'Apikey nya salah woyla cik 😂' });
+  if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
+  if (key !== process.env.API_KEY) return res.status(401).json({ message: 'API Key tidak valid.' });
 
   next();
 };
@@ -135,12 +135,15 @@ app.get('/server-info', async (req, res) => {
       all,
     });
   } catch (error) {
-    res.json({ message: "Gagal mengambil data server.", error: error.message });
+    res.status(500).json({ message: "Gagal mengambil data.", error: error.message });
   }
 });
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  if (err.name === 'ValidationError') { 
+    return res.status(400).json({ errors: err.errors });
+  }
   res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.message }); 
 });
 
