@@ -39,20 +39,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Validasi cords
-const allowedOrigins = ['https://www.ureshii.my.id', 'https://list-store.ureshii.my.id', 'https://api.ureshii.my.id/website/list', 'https://api.ureshii.my.id']; 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (process.env.NODE_ENV === 'development') { 
-      return callback(null, true); 
-    }
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('Domain kamu ditolak masuk ke server.'), false);
-    }
-    return callback(null, true);
-  }
-}));
 // Validasi ip
 const whitelist = ['185.27.134.168', '127.0.0.1', '66.33.60.129', '76.76.21.93']; 
 const ipWhitelistMiddleware = (req, res, next) => {
