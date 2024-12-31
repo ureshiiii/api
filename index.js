@@ -31,18 +31,26 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-/*
 const apiKeyMiddleware = (req, res, next) => {
-  const apiKeyPath = `/${process.env.API_KEY}/`; 
+  try {
+    const apiKey = req.path.split('/')[1];
+    const validApiKey = process.env.API_KEY;
 
-  if (!req.path.startsWith(apiKeyPath)) {
-    return res.status(401).json({ message: 'API Key tidak diberikan.' });
+    if (!apiKey) {
+      return res.status(400).json({ message: 'API Key tidak ditemukan dalam request.' });
+    }
+
+    if (apiKey === validApiKey) {
+      next();
+    } else {
+      res.status(401).json({ message: 'API Key tidak valid.' });
+    }
+
+  } catch (error) {
+    console.error("Error saat validasi API Key:", error);
+    res.status(500).json({ message: 'Terjadi kesalahan saat validasi API Key.' });
   }
-
-  next();
 };
-app.use(apiKeyMiddleware);
-*/
 
 app.get('/server-info', (req, res) => {
   try {
@@ -87,15 +95,15 @@ app.get('/server-info', (req, res) => {
   }
 });
 
-app.use('/buttons', buttonRoutes);
-app.use('/datadonate', donorDataRoutes);
-app.use('/kategori', kategoriRoutes);
-app.use('/layanan', layananRoutes);
-app.use('/produk', produkRoutes);
-app.use('/survey', responsesRoutes);
-app.use('/user', usersRoutes);
-app.use('/store', storeRoutes);
-app.use('/liststore', liststoreRoutes);
+app.use('/:apikey/buttons', apiKeyMiddleware, buttonRoutes);
+app.use('/:apikey/datadonate', apiKeyMiddleware, donorDataRoutes);
+app.use('/:apikey/kategori', apiKeyMiddleware, kategoriRoutes);
+app.use('/:apikey/layanan', apiKeyMiddleware, layananRoutes);
+app.use('/:apikey/produk', apiKeyMiddleware, produkRoutes);
+app.use('/:apikey/survey', apiKeyMiddleware, responsesRoutes);
+app.use('/:apikey/user', apiKeyMiddleware, usersRoutes);
+app.use('/:apikey/store', apiKeyMiddleware, storeRoutes);
+app.use('/:apikey/liststore', apiKeyMiddleware, liststoreRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
