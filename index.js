@@ -29,6 +29,12 @@ const limiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    res.json({ 
+      error: "TooManyRequests", 
+      message: "Anda telah mengirimkan terlalu banyak permintaan. Silakan coba lagi nanti." 
+    });
+  }
 });
 app.use(limiter);
 
@@ -38,18 +44,18 @@ const apiKeyMiddleware = (req, res, next) => {
     const validApiKey = process.env.API_KEY;
 
     if (!apiKey) {
-      return res.status(400).json({ message: 'API Key tidak ditemukan dalam header request.' });
+      return res.json({ error: 'MissingApiKey', message: 'API Key tidak ditemukan dalam header request.' });
     }
 
     if (apiKey !== validApiKey) {
-      res.status(401).json({ message: 'API Key tidak valid.' });
-    } else {
-      next();
-    }
+      return res.json({ error: 'InvalidApiKey', message: 'API Key tidak valid.' });
+    } 
+
+    next();
 
   } catch (error) {
     console.error("Error saat validasi API Key:", error);
-    res.status(500).json({ message: 'Terjadi kesalahan saat validasi API Key.' });
+    res.json({ error: 'ApiKeyValidationFailed', message: 'Terjadi kesalahan saat validasi API Key.' });
   }
 };
 
@@ -103,13 +109,13 @@ app.get('/server-info', (req, res) => {
     ];
 
     res.json({
-      status: "Database nya aktif hann :3",
       pesan: "Hacker jangan menyerang !",
       server: server,
       all: allRoutes,
     });
   } catch (error) {
-    res.status(500).json({ message: "Gagal mengambil data.", error: error.message });
+    console.error("Error saat mengambil data server:", error); 
+    res.json({ error: 'ServerError', message: "Gagal mengambil data server." });
   }
 });
 
@@ -126,9 +132,9 @@ app.use('/liststore', apiKeyMiddleware, liststoreRoutes);
 app.use((err, req, res, next) => {
   console.error(err.stack);
   if (err.name === 'ValidationError') {
-    return res.status(400).json({ errors: err.errors });
+    return res.json({ error: 'ValidationError', errors: err.errors });
   }
-  res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.message });
+  res.json({ error: 'ServerError', message: 'Terjadi kesalahan di server.', details: err.message });
 });
 
 function formatBytes(bytes, decimals = 2) {
