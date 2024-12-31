@@ -65,7 +65,7 @@ const ipWhitelistMiddleware = (req, res, next) => {
 app.use(ipWhitelistMiddleware);
 // Validasi apikey
 const apiKeyMiddleware = (req, res, next) => {
-  const excludedPaths = ['/public', '/', '/server-info', '/website/list/']; 
+  const excludedPaths = ['/public', '/server-info', '/website/list/']; 
   if (excludedPaths.some(path => req.path.startsWith(path))) {
     return next();
   }
