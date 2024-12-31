@@ -32,18 +32,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 
-const allowedDomains = ['www.ureshii.my.id', 'list-store.ureshii.my.id', 'api.ureshii.my.id'];
+const allowedDomains = [/^(https?:\/\/)?(www\.)?ureshii\.my\.id$/]; 
 
 const accessControlMiddleware = (req, res, next) => {
   const origin = req.headers.origin;
-  if (allowedDomains.includes(origin)) { 
-    const whitelist = ['185.27.134.168', '127.0.0.1', '66.33.60.129', '76.76.21.93'];
-    const clientIp = req.ip;
-    if (whitelist.includes(clientIp)) {
-      next();
-    } else {
-      res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
-    }
+  const isAllowed = allowedDomains.some(regex => regex.test(origin));
+  if (isAllowed) {
+    next(); 
   } else {
     res.status(403).json({ message: 'Domain kamu ditolak masuk ke server.' });
   }
