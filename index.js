@@ -29,12 +29,6 @@ const limiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req, res) => {
-    res.json({ 
-      error: "TooManyRequests", 
-      message: "Anda telah mengirimkan terlalu banyak permintaan. Silakan coba lagi nanti." 
-    });
-  }
 });
 app.use(limiter);
 
@@ -44,39 +38,20 @@ const apiKeyMiddleware = (req, res, next) => {
     const validApiKey = process.env.API_KEY;
 
     if (!apiKey) {
-      return res.json({ error: 'MissingApiKey', message: 'API Key tidak ditemukan dalam header request.' });
+      return res.status(400).json({ message: 'API Key tidak ditemukan dalam header request.' });
     }
 
     if (apiKey !== validApiKey) {
-      return res.json({ error: 'InvalidApiKey', message: 'API Key tidak valid.' });
-    } 
-
-    next();
+      res.status(401).json({ message: 'API Key tidak valid.' });
+    } else {
+      next();
+    }
 
   } catch (error) {
     console.error("Error saat validasi API Key:", error);
-    res.json({ error: 'ApiKeyValidationFailed', message: 'Terjadi kesalahan saat validasi API Key.' });
+    res.status(500).json({ message: 'Terjadi kesalahan saat validasi API Key.' });
   }
 };
-
-const allowedOrigins = [
-  'www.ureshii.my.id', 
-  'ureshii.my.id', 
-  'api.ureshii.my.id', 
-  'list-store.ureshii.my.id'
-];
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  if (allowedOrigins.includes(origin) || !origin || req.method === 'GET') { 
-    res.setHeader('Access-Control-Allow-Origin', origin || '*'); 
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
-  }
-
-  next();
-});
 
 app.get('/server-info', (req, res) => {
   try {
@@ -111,13 +86,13 @@ app.get('/server-info', (req, res) => {
     ];
 
     res.json({
+      status: "Database nya aktif hann :3",
       pesan: "Hacker jangan menyerang !",
       server: server,
       all: allRoutes,
     });
   } catch (error) {
-    console.error("Error saat mengambil data server:", error); 
-    res.json({ error: 'ServerError', message: "Gagal mengambil data server." });
+    res.status(500).json({ message: "Gagal mengambil data.", error: error.message });
   }
 });
 
@@ -134,9 +109,9 @@ app.use('/liststore', apiKeyMiddleware, liststoreRoutes);
 app.use((err, req, res, next) => {
   console.error(err.stack);
   if (err.name === 'ValidationError') {
-    return res.json({ error: 'ValidationError', errors: err.errors });
+    return res.status(400).json({ errors: err.errors });
   }
-  res.json({ error: 'ServerError', message: 'Terjadi kesalahan di server.', details: err.message });
+  res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.message });
 });
 
 function formatBytes(bytes, decimals = 2) {
