@@ -39,7 +39,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-/*
 // Validasi cords
 const allowedOrigins = ['https://www.ureshii.my.id', 'https://list-store.ureshii.my.id', 'https://api.ureshii.my.id/website/list', 'https://api.ureshii.my.id']; 
 app.use(cors({
@@ -61,11 +60,10 @@ const ipWhitelistMiddleware = (req, res, next) => {
   if (whitelist.includes(clientIp)) {
     next();
   } else {
-    res.status(403).json({ message: `IP kamu "${clientIp}" ditolak masuk ke server` });
+    res.json({ message: `IP lu [ ${clientIp} ] ditolak masuk ke server jir 😂` });
   }
 };
 app.use(ipWhitelistMiddleware);
-*/
 
 // Validasi apikey
 const apiKeyMiddleware = (req, res, next) => {
@@ -76,8 +74,8 @@ const apiKeyMiddleware = (req, res, next) => {
 
   const key = req.path.split('/')[1];
   req.url = req.url.replace(`/${key}`, '');
-  if (!key) return res.status(401).json({ message: 'API Key tidak diberikan.' });
-  if (key !== process.env.API_KEY) return res.status(401).json({ message: 'API Key tidak valid.' });
+  if (!key) return res.json({ message: 'Masukin parameter apikey lah dongo. Kalo gatau gausa coba coba fetch ya 😂' });
+  if (key !== process.env.API_KEY) return res.json({ message: 'Apikey nya salah woyla cik 😂' });
 
   next();
 };
@@ -137,7 +135,7 @@ app.get('/server-info', async (req, res) => {
       all,
     });
   } catch (error) {
-    res.status(500).json({ message: "Gagal mengambil data.", error: error.message });
+    res.json({ message: "Gagal mengambil data server.", error: error.message });
   }
 });
 
