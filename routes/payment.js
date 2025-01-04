@@ -3,86 +3,107 @@ import connection from '../config/database.js';
 
 const router = express.Router();
 
-// Get all store data by id
+// Get payment by ID
 router.get('/:storeId', (req, res) => {
   const storeId = req.params.storeId;
-  const query = `SELECT * FROM payment WHERE storeId = ?`;
+
+  if (!storeId) {
+    return res.status(400).json({ message: 'Store ID harus diisi.' });
+  }
+
+  const query = `SELECT * FROM payment WHERE store_id = ?`;
 
   connection.query(query, [storeId], (err, results) => {
     if (err) {
       console.error('Error fetching payment data:', err);
       return res.status(500).json({ 
-        message: 'Gagal mengambil data payment.' 
+        message: 'Gagal mengambil data payment.',
+        error: err.message 
       });
     }
     res.status(200).json(results);
   });
 });
 
-// Add new payment info
-router.post('/', (req, res) => {
-  const {
-    storeId,
-    eWallets, 
-    qris, 
-    bankAccounts, 
-  } = req.body;
+// Add payment by ID
+router.post('/:storeId', (req, res) => {
+  const storeId = req.params.storeId;
 
   if (!storeId) {
     return res.status(400).json({ message: 'Store ID harus diisi.' });
   }
 
-  const paymentData = {
-    storeId,
-    eWallets: JSON.stringify(eWallets || {}),
-    qris: JSON.stringify(qris || {}),
-    bankAccounts: JSON.stringify(bankAccounts || {}),
-  };
+  const { eWallets, qris, bankAccounts } = req.body;
 
-  const query = `INSERT INTO payment SET ?`;
-
-  connection.query(query, paymentData, (err, result) => {
+  const checkQuery = `SELECT id FROM payment WHERE store_id = ?`;
+  connection.query(checkQuery, [storeId], (err, results) => {
     if (err) {
-      console.error('Error inserting payment data:', err);
+      console.error('Error checking payment data:', err);
       return res.status(500).json({ 
-        message: 'Gagal menambahkan data payment.' 
+        message: 'Gagal mengecek data payment.',
+        error: err.message
       });
     }
-    res.status(201).json({ 
-      message: 'Data payment berhasil ditambahkan.',
-      id: result.insertId
+
+    if (results.length > 0) {
+      return res.status(400).json({ 
+        message: 'Store sudah memiliki data payment.' 
+      });
+    }
+
+    const paymentData = {
+      store_id: storeId,
+      eWallets: JSON.stringify(eWallets || {}),
+      qris: JSON.stringify(qris || {}),
+      bankAccounts: JSON.stringify(bankAccounts || {}),
+    };
+
+    const query = `INSERT INTO payment SET ?`;
+
+    connection.query(query, paymentData, (err, result) => {
+      if (err) {
+        console.error('Error inserting payment data:', err);
+        return res.status(500).json({ 
+          message: 'Gagal menambahkan data payment.',
+          error: err.message
+        });
+      }
+      res.status(201).json({ 
+        message: 'Data payment berhasil ditambahkan.',
+        id: result.insertId
+      });
     });
   });
 });
 
-// Update data payment by ID
-router.put('/:id', (req, res) => {
+// Update payment by ID
+router.put('/:storeId/:id', (req, res) => {
+  const storeId = req.params.storeId;
   const paymentId = req.params.id;
-  const {
-    storeId,
-    eWallets,
-    qris,
-    bankAccounts,
-  } = req.body;
 
   if (!storeId) {
     return res.status(400).json({ message: 'Store ID harus diisi.' });
   }
+  if (!paymentId) {
+    return res.status(400).json({ message: 'Payment ID harus diisi.' });
+  }
+
+  const { eWallets, qris, bankAccounts } = req.body;
 
   const paymentData = {
-    storeId,
     eWallets: JSON.stringify(eWallets || {}),
     qris: JSON.stringify(qris || {}),
     bankAccounts: JSON.stringify(bankAccounts || {}),
   };
 
-  const query = `UPDATE payment SET ? WHERE id = ?`;
+  const query = `UPDATE payment SET ? WHERE id = ? AND store_id = ?`;
 
-  connection.query(query, [paymentData, paymentId], (err, result) => {
+  connection.query(query, [paymentData, paymentId, storeId], (err, result) => {
     if (err) {
       console.error('Error updating payment data:', err);
       return res.status(500).json({ 
-        message: 'Gagal mengupdate data payment.' 
+        message: 'Gagal mengupdate data payment.',
+        error: err.message
       });
     }
     if (result.affectedRows === 0) {
@@ -96,16 +117,26 @@ router.put('/:id', (req, res) => {
   });
 });
 
-// Delete data payment by ID
-router.delete('/:id', (req, res) => {
+// Delete payment by ID
+router.delete('/:storeId/:id', (req, res) => {
+  const storeId = req.params.storeId;
   const paymentId = req.params.id;
-  const query = `DELETE FROM payment WHERE id = ?`;
 
-  connection.query(query, [paymentId], (err, result) => {
+  if (!storeId) {
+    return res.status(400).json({ message: 'Store ID harus diisi.' });
+  }
+  if (!paymentId) {
+    return res.status(400).json({ message: 'Payment ID harus diisi.' });
+  }
+
+  const query = `DELETE FROM payment WHERE id = ? AND store_id = ?`;
+
+  connection.query(query, [paymentId, storeId], (err, result) => {
     if (err) {
       console.error('Error deleting payment data:', err);
       return res.status(500).json({ 
-        message: 'Gagal menghapus data payment.' 
+        message: 'Gagal menghapus data payment.',
+        error: err.message
       });
     }
     if (result.affectedRows === 0) {
