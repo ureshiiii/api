@@ -21,16 +21,16 @@ router.get('/:userId', async (req, res) => {
 // Add new payment for the specified user ID
 router.post('/:userId', async (req, res) => {
   const userId = req.params.userId;
-  const { name, nomor, kategori } = req.body;
+  const { name, nomor, kategori, atas_nama } = req.body;
 
-  if (!name || !nomor || !kategori) {
-    return res.status(400).json({ message: 'Nama, nomor, dan kategori payment wajib diisi.' });
+  if (!name || !nomor || !kategori || !atas_nama) {
+    return res.status(400).json({ message: 'Nama, nomor, kategori, dan atas nama payment wajib diisi.' });
   }
 
   try {
     const [result] = await db.query(
-      'INSERT INTO payment (user_id, name, nomor, kategori) VALUES (?, ?, ?, ?)',
-      [userId, name, nomor, kategori]
+      'INSERT INTO payment (user_id, name, nomor, kategori, atas_nama) VALUES (?, ?, ?, ?, ?)',
+      [userId, name, nomor, kategori, atas_nama]
     );
     res.status(201).json({ message: 'Payment berhasil ditambahkan.', id: result.insertId });
   } catch (err) {
@@ -43,16 +43,16 @@ router.post('/:userId', async (req, res) => {
 router.put('/:userId/:id', async (req, res) => {
   const userId = req.params.userId;
   const paymentId = req.params.id;
-  const { name, nomor, kategori } = req.body;
+  const { name, nomor, kategori, atas_nama } = req.body;
 
-  if (!name && !nomor && !kategori) {
-    return res.status(400).json({ message: 'Minimal nama, nomor, atau kategori payment harus diisi.' });
+  if (!name && !nomor && !kategori && !atas_nama) {
+    return res.status(400).json({ message: 'Minimal nama, nomor, kategori, atau atas nama payment harus diisi.' });
   }
 
   try {
     const [result] = await db.query(
-      'UPDATE payment SET name = COALESCE(?, name), nomor = COALESCE(?, nomor), kategori = COALESCE(?, kategori) WHERE id = ? AND user_id = ?', // Tambahkan kategori di query
-      [name, nomor, kategori, paymentId, userId]
+      'UPDATE payment SET name = COALESCE(?, name), nomor = COALESCE(?, nomor), kategori = COALESCE(?, kategori), atas_nama = COALESCE(?, atas_nama) WHERE id = ? AND user_id = ?',
+      [name, nomor, kategori, atas_nama, paymentId, userId]
     );
 
     if (result.affectedRows === 0) {
