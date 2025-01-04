@@ -3,151 +3,89 @@ import connection from '../config/database.js';
 
 const router = express.Router();
 
-// Get payment by ID
-router.get('/:storeId', (req, res) => {
-  const storeId = req.params.storeId;
-
-  if (!storeId) {
-    return res.status(400).json({ message: 'Store ID harus diisi.' });
+// Get all payment for the specified user ID
+router.get('/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const [results] = await db.query(
+      'SELECT * FROM payment WHERE user_id = ?',
+      [userId]
+    );
+    res.json({ data: results });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal mengambil data payment.', error: err.message });
   }
-
-  const query = `SELECT * FROM payment WHERE store_id = ?`;
-
-  connection.query(query, [storeId], (err, results) => {
-    if (err) {
-      console.error('Error fetching payment data:', err);
-      return res.status(500).json({ 
-        message: 'Gagal mengambil data payment.',
-        error: err.message 
-      });
-    }
-    res.status(200).json(results);
-  });
 });
 
-// Add payment by ID
-router.post('/:storeId', (req, res) => {
-  const storeId = req.params.storeId;
+// Add new payment for the specified user ID
+router.post('/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  const { name, nomor } = req.body;
 
-  if (!storeId) {
-    return res.status(400).json({ message: 'Store ID harus diisi.' });
+  if (!name || !nomor) {
+    return res.status(400).json({ message: 'Nama dan nomor payment wajib diisi.' });
   }
 
-  const { eWallets, qris, bankAccounts } = req.body;
-
-  const checkQuery = `SELECT id FROM payment WHERE store_id = ?`;
-  connection.query(checkQuery, [storeId], (err, results) => {
-    if (err) {
-      console.error('Error checking payment data:', err);
-      return res.status(500).json({ 
-        message: 'Gagal mengecek data payment.',
-        error: err.message
-      });
-    }
-
-    if (results.length > 0) {
-      return res.status(400).json({ 
-        message: 'Store sudah memiliki data payment.' 
-      });
-    }
-
-    const paymentData = {
-      store_id: storeId,
-      eWallets: JSON.stringify(eWallets || {}),
-      qris: JSON.stringify(qris || {}),
-      bankAccounts: JSON.stringify(bankAccounts || {}),
-    };
-
-    const query = `INSERT INTO payment SET ?`;
-
-    connection.query(query, paymentData, (err, result) => {
-      if (err) {
-        console.error('Error inserting payment data:', err);
-        return res.status(500).json({ 
-          message: 'Gagal menambahkan data payment.',
-          error: err.message
-        });
-      }
-      res.status(201).json({ 
-        message: 'Data payment berhasil ditambahkan.',
-        id: result.insertId
-      });
-    });
-  });
+  try {
+    const [result] = await db.query(
+      'INSERT INTO payment (user_id, name, nomor) VALUES (?, ?, ?)',
+      [userId, name, nomor]
+    );
+    res.status(201).json({ message: 'Payment berhasil ditambahkan.', id: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menambahkan payment.', error: err.message });
+  }
 });
 
-// Update payment by ID
-router.put('/:storeId/:id', (req, res) => {
-  const storeId = req.params.storeId;
+// Update payment by ID for the specified user ID
+router.put('/:userId/:id', async (req, res) => {
+  const userId = req.params.userId;
+  const paymentId = req.params.id;
+  const { name, nomor } = req.body;
+
+  if (!name && !nomor) {
+    return res.status(400).json({ message: 'Minimal nama atau nomor payment harus diisi.' });
+  }
+
+  try {
+    const [result] = await db.query(
+      'UPDATE payment SET name = COALESCE(?, name), nomor = COALESCE(?, nomor) WHERE id = ? AND user_id = ?',
+      [name, nomor, paymentId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'ID payment tidak ditemukan.' });
+    }
+
+    res.json({ message: 'Payment berhasil diperbarui.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal memperbarui payment.', error: err.message });
+  }
+});
+
+// Delete payment by ID for the specified user ID
+router.delete('/:userId/:id', async (req, res) => {
+  const userId = req.params.userId;
   const paymentId = req.params.id;
 
-  if (!storeId) {
-    return res.status(400).json({ message: 'Store ID harus diisi.' });
-  }
-  if (!paymentId) {
-    return res.status(400).json({ message: 'Payment ID harus diisi.' });
-  }
+  try {
+    const [result] = await db.query(
+      'DELETE FROM payment WHERE id = ? AND user_id = ?',
+      [paymentId, userId]
+    );
 
-  const { eWallets, qris, bankAccounts } = req.body;
-
-  const paymentData = {
-    eWallets: JSON.stringify(eWallets || {}),
-    qris: JSON.stringify(qris || {}),
-    bankAccounts: JSON.stringify(bankAccounts || {}),
-  };
-
-  const query = `UPDATE payment SET ? WHERE id = ? AND store_id = ?`;
-
-  connection.query(query, [paymentData, paymentId, storeId], (err, result) => {
-    if (err) {
-      console.error('Error updating payment data:', err);
-      return res.status(500).json({ 
-        message: 'Gagal mengupdate data payment.',
-        error: err.message
-      });
-    }
     if (result.affectedRows === 0) {
-      return res.status(404).json({ 
-        message: 'Data payment tidak ditemukan.' 
-      });
+      return res.status(404).json({ message: 'ID payment tidak ditemukan.' });
     }
-    res.status(200).json({ 
-      message: 'Data payment berhasil diupdate.' 
-    });
-  });
-});
 
-// Delete payment by ID
-router.delete('/:storeId/:id', (req, res) => {
-  const storeId = req.params.storeId;
-  const paymentId = req.params.id;
-
-  if (!storeId) {
-    return res.status(400).json({ message: 'Store ID harus diisi.' });
+    res.json({ message: 'Payment berhasil dihapus.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Gagal menghapus payment.', error: err.message });
   }
-  if (!paymentId) {
-    return res.status(400).json({ message: 'Payment ID harus diisi.' });
-  }
-
-  const query = `DELETE FROM payment WHERE id = ? AND store_id = ?`;
-
-  connection.query(query, [paymentId, storeId], (err, result) => {
-    if (err) {
-      console.error('Error deleting payment data:', err);
-      return res.status(500).json({ 
-        message: 'Gagal menghapus data payment.',
-        error: err.message
-      });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ 
-        message: 'Data payment tidak ditemukan.' 
-      });
-    }
-    res.status(200).json({ 
-      message: 'Data payment berhasil dihapus.' 
-    });
-  });
 });
 
 export default router;
