@@ -21,16 +21,16 @@ router.get('/:userId', async (req, res) => {
 // Add new payment for the specified user ID
 router.post('/:userId', async (req, res) => {
   const userId = req.params.userId;
-  const { name, nomor } = req.body;
+  const { name, nomor, kategori } = req.body;
 
-  if (!name || !nomor) {
-    return res.status(400).json({ message: 'Nama dan nomor payment wajib diisi.' });
+  if (!name || !nomor || !kategori) {
+    return res.status(400).json({ message: 'Nama, nomor, dan kategori payment wajib diisi.' });
   }
 
   try {
     const [result] = await db.query(
-      'INSERT INTO payment (user_id, name, nomor) VALUES (?, ?, ?)',
-      [userId, name, nomor]
+      'INSERT INTO payment (user_id, name, nomor, kategori) VALUES (?, ?, ?, ?)',
+      [userId, name, nomor, kategori]
     );
     res.status(201).json({ message: 'Payment berhasil ditambahkan.', id: result.insertId });
   } catch (err) {
@@ -43,16 +43,16 @@ router.post('/:userId', async (req, res) => {
 router.put('/:userId/:id', async (req, res) => {
   const userId = req.params.userId;
   const paymentId = req.params.id;
-  const { name, nomor } = req.body;
+  const { name, nomor, kategori } = req.body;
 
-  if (!name && !nomor) {
-    return res.status(400).json({ message: 'Minimal nama atau nomor payment harus diisi.' });
+  if (!name && !nomor && !kategori) {
+    return res.status(400).json({ message: 'Minimal nama, nomor, atau kategori payment harus diisi.' });
   }
 
   try {
     const [result] = await db.query(
-      'UPDATE payment SET name = COALESCE(?, name), nomor = COALESCE(?, nomor) WHERE id = ? AND user_id = ?',
-      [name, nomor, paymentId, userId]
+      'UPDATE payment SET name = COALESCE(?, name), nomor = COALESCE(?, nomor), kategori = COALESCE(?, kategori) WHERE id = ? AND user_id = ?', // Tambahkan kategori di query
+      [name, nomor, kategori, paymentId, userId]
     );
 
     if (result.affectedRows === 0) {
