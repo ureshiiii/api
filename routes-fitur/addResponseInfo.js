@@ -4,10 +4,13 @@ const addResponseInfo = (req, res, next) => {
   res.json = function (data) {
     if (req.isFromRouteFitur) {
       if (data && typeof data === 'object') {
+        // Periksa apakah ada properti error, jika ada, set status ke false
+        const isError = data.error !== undefined;
+
         data = {
-          status: data.status === undefined ? true : data.status,
+          status: isError ? false : (data.status === undefined ? true : data.status),
           author: 'parhan',
-          ...data, // Menyalin properti dari data asli
+          ...data,
         };
       }
     }
