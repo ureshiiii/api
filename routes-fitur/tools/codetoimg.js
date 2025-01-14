@@ -1,6 +1,6 @@
 import express from 'express';
 import fetch from 'node-fetch';
-import uploadImage from '../../lib/uploadImage.js'; // Import fungsi uploadImage
+import uploadImage from '../../lib/uploadImage.js';
 
 const router = express.Router();
 
@@ -85,8 +85,8 @@ async function code2img(code) {
   }
 }
 
-router.post('/', async (req, res) => {
-  const { code } = req.body;
+router.get('/', async (req, res) => {
+  const { code } = req.query;
 
   if (!code) {
     return res.status(400).json({
@@ -96,7 +96,7 @@ router.post('/', async (req, res) => {
 
   try {
     const imageBuffer = await code2img(code);
-    const imageUrl = await uploadImage(imageBuffer); // Menggunakan fungsi uploadImage
+    const imageUrl = await uploadImage(imageBuffer);
     res.status(200).json({
       data: imageUrl
     });
