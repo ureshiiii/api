@@ -113,7 +113,7 @@ app.get('/server-info', (req, res) => {
       '/store',
       '/liststore',
       '/payment',
-      '/shorturl',
+      '/u',
     ];
 
     res.json({
@@ -137,7 +137,7 @@ app.use('/user', apiKeyMiddleware, usersRoutes);
 app.use('/store', apiKeyMiddleware, storeRoutes);
 app.use('/liststore', apiKeyMiddleware, liststoreRoutes);
 app.use('/payment', apiKeyMiddleware, paymentRoutes);
-app.use('/shorturl', tourlRoutes);
+app.use('/', tourlRoutes);
 
 app.use((err, req, res, next) => {
   if (err.name === 'ValidationError') {
