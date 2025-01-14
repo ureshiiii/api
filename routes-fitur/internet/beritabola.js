@@ -54,7 +54,7 @@ router.get('/', async (req, res) => {
   }
 
   try {
-    const data = await searchNews(q);
+    const data = await searchNews(query);
 
     if (data.error) {
         return res.status(404).json(data);
