@@ -8,8 +8,6 @@ async function symbols(query) {
   try {
     if (!query.trim()) {
       return {
-        query: query,
-        total: 0,
         symbols: [],
         error: 'Permintaan tidak boleh kosong.',
       };
@@ -47,8 +45,6 @@ async function symbols(query) {
 
     if (!emojis.length) {
       return {
-        query: query,
-        total: 0,
         symbols: [],
         error: 'Tidak ada emoji yang ditemukan untuk permintaan ini.',
       };
@@ -61,15 +57,11 @@ async function symbols(query) {
     );
 
     return {
-      query: query,
-      total: limitedEmojis.length,
       symbols: formattedEmojis,
     };
   } catch (error) {
     console.error('Gagal mengambil emoji:', error);
     return {
-      query: query,
-      total: 0,
       symbols: [],
       error: 'Gagal mengambil emoji dari situs web.',
     };
@@ -89,8 +81,6 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Kesalahan:', error);
     res.status(500).json({
-      query: req.query.query,
-      total: 0,
       symbols: [],
       error: 'Terjadi kesalahan saat memproses permintaan.',
     });
