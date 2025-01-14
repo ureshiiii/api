@@ -1,7 +1,6 @@
 import express from 'express';
 import fetch from 'node-fetch';
-import FormData from 'form-data';
-import { fileTypeFromBuffer } from 'file-type';
+import uploadImage from '../../lib/uploadImage.js'; // Import fungsi uploadImage
 
 const router = express.Router();
 
@@ -86,35 +85,8 @@ async function code2img(code) {
   }
 }
 
-async function uploadImageToFreeImageHost(imageBuffer) {
-  try {
-    const formData = new FormData();
-    formData.append("source", imageBuffer, { filename: "image.png" });
-    formData.append("key", "6d207e02198a847aa98d0a2a901485a5"); 
-
-    const response = await fetch("https://freeimage.host/api/1/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Gagal mengunggah gambar: ${response.status}`);
-    }
-
-    const json = await response.json();
-
-    if (json.status_code === 200) {
-      return json.image.url;
-    } else {
-      throw new Error(`Gagal mengunggah gambar: ${json.status_txt}`);
-    }
-  } catch (error) {
-    throw error;
-  }
-}
-
-router.get('/', async (req, res) => {
-  const { code } = req.query;
+router.post('/', async (req, res) => {
+  const { code } = req.body;
 
   if (!code) {
     return res.status(400).json({
@@ -124,7 +96,7 @@ router.get('/', async (req, res) => {
 
   try {
     const imageBuffer = await code2img(code);
-    const imageUrl = await uploadImageToFreeImageHost(imageBuffer);
+    const imageUrl = await uploadImage(imageBuffer); // Menggunakan fungsi uploadImage
     res.status(200).json({
       data: imageUrl
     });
