@@ -19,7 +19,7 @@ async function getEmojiSymbols(query) {
     const result = [];
     $(".combo-ctn").each((index, element) => {
       const combo = $(element).attr("data-combo");
-      if (combo && result.length < 10) {
+      if (combo && result.length < 50) {
         result.push(combo); 
       }
     });
