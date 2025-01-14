@@ -57,7 +57,7 @@ async function symbols(query) {
     const limitedEmojis = emojis.slice(0, 100);
 
     const formattedEmojis = limitedEmojis.map(
-      (emoji, index) => `${index + 1}. ${emoji}`
+      (emoji) => `${emoji}`
     );
 
     return {
