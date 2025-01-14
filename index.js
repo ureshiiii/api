@@ -8,6 +8,7 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import db from './config/database.js';
 
 dotenv.config();
 
@@ -155,7 +156,6 @@ async function loadApiRoutes() {
           const module = await import(moduleUrl);
           const route = module.default;
           app.use(routePath, route);
-          console.log(`Route loaded: ${routePath}`);
         } catch (err) {
           console.error(`Failed to load route ${routePath}:`, err);
         }
@@ -166,6 +166,8 @@ async function loadApiRoutes() {
   await traverseDir(apiDir);
   return routes;
 }
+
+const apiRoutes = await loadApiRoutes();
 
 app.get('/', async (req, res) => {
   const displayedRoutes = {
@@ -241,8 +243,6 @@ app.get('/', async (req, res) => {
   res.json(displayedRoutes);
 });
 
-const apiRoutes = await loadApiRoutes();
-
 app.use('/buttons', apiKeyMiddleware, buttonRoutes);
 app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
 app.use('/kategori', apiKeyMiddleware, kategoriRoutes);
@@ -253,6 +253,27 @@ app.use('/user', apiKeyMiddleware, usersRoutes);
 app.use('/store', apiKeyMiddleware, storeRoutes);
 app.use('/liststore', apiKeyMiddleware, liststoreRoutes);
 app.use('/payment', apiKeyMiddleware, paymentRoutes);
+
+app.get('/:shortId', async (req, res) => {
+  try {
+    const { shortId } = req.params;
+
+    const [rows] = await db.query(
+      'SELECT original_url FROM urls WHERE short_id = ?',
+      [shortId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'URL pendek tidak ditemukan.' });
+    }
+
+    const originalUrl = rows[0].original_url;
+    res.redirect(301, originalUrl);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Terjadi kesalahan saat mengalihkan URL.' });
+  }
+});
 
 app.use((err, req, res, next) => {
   if (err.name === 'ValidationError') {
