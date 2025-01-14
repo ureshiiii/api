@@ -1,0 +1,78 @@
+import express from 'express';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+
+const router = express.Router();
+
+const base_url = "https://fruityblox.com";
+const base_header = {
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+  "Accept-Encoding": "gzip, deflate, br, zstd",
+  "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7,ms;q=0.6",
+  "Cache-Control": "no-cache",
+  Cookie: "_ga_F55Y1PYQ4M=GS1.1.1735536080.1.1.1735537683.0.0.0",
+  Pragma: "no-cache",
+  Priority: "u=0, i",
+  "Sec-CH-UA": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+  "Sec-CH-UA-Mobile": "?0",
+  "Sec-CH-UA-Platform": '"Windows"',
+  "Sec-Fetch-Dest": "document",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Site": "none",
+  "Sec-Fetch-User": "?1",
+  "Upgrade-Insecure-Requests": "1",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+};
+
+async function getFruitValue() {
+  try {
+    const r = await axios.get(`${base_url}/blox-fruits-value-list`, {
+      headers: {
+        ...base_header,
+      },
+    });
+    const $ = cheerio.load(r.data);
+    const fruitValue = $("div.col-span-full")
+      .children("div")
+      .slice(1)
+      .map((i, el) => ({
+        name: $(el).find("div.items-center.mr-auto div p.font-bold.uppercase").text().trim().toUpperCase(),
+        type: $(el).find("p.text-xs").text(),
+        image: $(el).find("img").attr("src"),
+        price: $(el)
+          .find("div.items-center > p")
+          .map((i, el) => $(el).text())
+          .get(),
+        link: base_url + $(el).find("a").attr("href"),
+      }))
+      .get();
+
+      return {
+        data: fruitValue
+      };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      error: 'Terjadi kesalahan saat mengambil data Blox Fruit Value.'
+    };
+  }
+}
+
+router.get('/', async (req, res) => {
+  try {
+    const data = await getFruitValue();
+
+    if (data.error) {
+        return res.status(500).json(data);
+    }
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({
+      error: 'Terjadi kesalahan saat memproses permintaan.'
+    });
+  }
+});
+
+export default router;
