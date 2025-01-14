@@ -4,8 +4,11 @@ const addResponseInfo = (req, res, next) => {
   res.json = function (data) {
     if (req.isFromRouteFitur) {
       if (data && typeof data === 'object') {
-        data.status = data.status === undefined ? true : data.status;
-        data.author = 'parhan';
+        data = {
+          status: data.status === undefined ? true : data.status,
+          author: 'parhan',
+          ...data, // Menyalin properti dari data asli
+        };
       }
     }
     originalJson.call(this, data);
