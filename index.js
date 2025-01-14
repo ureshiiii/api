@@ -9,10 +9,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import db from './config/database.js';
-import addResponseInfo from './config/addResponseInfo.js';
+import addResponseInfo from './routes-fitur/addResponseInfo.js';
 
 dotenv.config();
 
+// Import route yang diperlukan
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
 import kategoriRoutes from './routes/kategori.js';
@@ -157,7 +158,6 @@ async function loadApiRoutes() {
           const module = await import(moduleUrl);
           const route = module.default;
 
-          // Tandai request yang berasal dari routes-fitur dan tambahkan middleware
           app.use(
             routePath,
             (req, res, next) => {
@@ -173,9 +173,13 @@ async function loadApiRoutes() {
       }
     }
   }
+
+  await traverseDir(apiDir);
+  return routes;
 }
 
-const apiRoutes = await loadApiRoutes();
+// Tunggu sampai loadApiRoutes() selesai sebelum melanjutkan
+const apiRoutes = await loadApiRoutes(); 
 
 app.get('/', async (req, res) => {
   const displayedRoutes = {
@@ -191,6 +195,7 @@ app.get('/', async (req, res) => {
     displayedRoutes[category][basePath].push(`${fullPath} [${methods}]`);
   };
 
+  // Route private masih didaftarkan secara manual
   const privateRoutes = [
     { path: '/buttons', route: buttonRoutes },
     { path: '/datadonate', route: donorDataRoutes },
@@ -215,42 +220,17 @@ app.get('/', async (req, res) => {
     });
   });
 
-  const apiDir = path.join(__dirname, 'routes-fitur');
-  async function traverseDir(directory, category = '') {
-    const files = await fs.promises.readdir(directory);
-    for (const file of files) {
-      const filePath = path.join(directory, file);
-      const stat = await fs.promises.stat(filePath);
-      if (stat.isDirectory()) {
-        await traverseDir(filePath, category ? `${category}/${file}` : file);
-      } else if (file.endsWith('.js')) {
-        const routeName = file.replace('.js', '');
-        const fullCategory = category ? `api/${category}` : 'api';
-        const routePath = `/${routeName}`;
-        const moduleUrl = new URL(filePath, `file://${__dirname}/`).href;
+  // Route dari routes-fitur ditampilkan
+  Object.entries(apiRoutes).forEach(([category, routes]) => {
+    routes.forEach(routePath => {
+        addRouteToDisplay('/' + category, routePath.replace('/' + category, ''), 'api', 'GET');
+    });
+  });
 
-        try {
-          const module = await import(moduleUrl);
-          const route = module.default;
-          route.stack.forEach((layer) => {
-            if (layer.route) {
-              const methods = Object.keys(layer.route.methods)
-                .filter((method) => layer.route.methods[method])
-                .join(', ');
-              addRouteToDisplay('/' + fullCategory, routePath, 'api', methods);
-            }
-          });
-        } catch (err) {
-          console.error(`Failed to load route ${routePath}:`, err);
-        }
-      }
-    }
-  }
-
-  await traverseDir(apiDir);
   res.json(displayedRoutes);
 });
 
+// Daftarkan route private dengan apiKeyMiddleware
 app.use('/buttons', apiKeyMiddleware, buttonRoutes);
 app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
 app.use('/kategori', apiKeyMiddleware, kategoriRoutes);
@@ -288,10 +268,11 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ errors: err.errors });
   }
   console.error(err);
-  res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.message });
+  res
+    .status(500)
+    .json({ message: 'Terjadi kesalahan di server.', error: err.message });
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-  
