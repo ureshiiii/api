@@ -127,20 +127,19 @@ app.get('/server-info', (req, res) => {
   }
 });
 
-// fungsi import semua file fitur bot whatsapp
-function loadApiRoutes() {
+async function loadApiRoutes() {
   const apiDir = path.join(__dirname, 'routes-fitur');
   const routes = {};
 
-  function traverseDir(directory, category = '') {
-    const files = fs.readdirSync(directory);
+  async function traverseDir(directory, category = '') {
+    const files = await fs.promises.readdir(directory);
 
     for (const file of files) {
       const filePath = path.join(directory, file);
-      const stat = fs.statSync(filePath);
+      const stat = await fs.promises.stat(filePath);
 
       if (stat.isDirectory()) {
-        traverseDir(filePath, category ? `${category}/${file}` : file);
+        await traverseDir(filePath, category ? `${category}/${file}` : file);
       } else if (file.endsWith('.js')) {
         const routeName = file.replace('.js', '');
         const fullCategory = category ? `api/${category}` : 'api';
@@ -151,95 +150,99 @@ function loadApiRoutes() {
         }
         routes[fullCategory].push(routePath);
 
-        import(filePath.replace(__dirname, '.').replace(/\\/g, '/')).then(module => {
-            const route = module.default;
-            app.use(routePath, route);
-            console.log(`Route loaded: ${routePath}`);
-          }).catch(err => {
-            console.error(`Failed to load route ${routePath}:`, err);
-          });
+        const moduleUrl = new URL(filePath, `file://${__dirname}/`).href;
+        try {
+          const module = await import(moduleUrl);
+          const route = module.default;
+          app.use(routePath, route);
+          console.log(`Route loaded: ${routePath}`);
+        } catch (err) {
+          console.error(`Failed to load route ${routePath}:`, err);
+        }
       }
     }
   }
 
-  traverseDir(apiDir);
+  await traverseDir(apiDir);
   return routes;
 }
 
-// tampilkan semua route yang tersedia
-app.get('/', (req, res) => {
-    const displayedRoutes = {
-        private: {},
-        api: {}
-    };
+app.get('/', async (req, res) => {
+  const displayedRoutes = {
+    private: {},
+    api: {},
+  };
 
-    const addRouteToDisplay = (basePath, routePath, category, methods) => {
-        const fullPath = `${basePath}${routePath}`;
-        if (!displayedRoutes[category][basePath]) {
-            displayedRoutes[category][basePath] = [];
-        }
-        displayedRoutes[category][basePath].push(`${fullPath} [${methods}]`);
-    };
-
-    // route pribadi ( buat website )
-    const privateRoutes = [
-        { path: '/buttons', route: buttonRoutes },
-        { path: '/datadonate', route: donorDataRoutes },
-        { path: '/kategori', route: kategoriRoutes },
-        { path: '/layanan', route: layananRoutes },
-        { path: '/produk', route: produkRoutes },
-        { path: '/survey', route: responsesRoutes },
-        { path: '/user', route: usersRoutes },
-        { path: '/store', route: storeRoutes },
-        { path: '/liststore', route: liststoreRoutes },
-        { path: '/payment', route: paymentRoutes }
-    ];
-
-    privateRoutes.forEach(({ path, route }) => {
-        route.stack.forEach(layer => {
-            if (layer.route) {
-                const methods = Object.keys(layer.route.methods).filter(method => layer.route.methods[method]).join(', ');
-                addRouteToDisplay(path, '', 'private', methods);
-            }
-        });
-    });
-
-    // route api fitur bot whatsapp
-    const apiDir = path.join(__dirname, 'routes-fitur');
-    function traverseDir(directory, category = '') {
-        const files = fs.readdirSync(directory);
-        for (const file of files) {
-            const filePath = path.join(directory, file);
-            const stat = fs.statSync(filePath);
-            if (stat.isDirectory()) {
-                traverseDir(filePath, category ? `${category}/${file}` : file);
-            } else if (file.endsWith('.js')) {
-                const routeName = file.replace('.js', '');
-                const fullCategory = category ? `api/${category}` : 'api';
-                const routePath = `/${routeName}`;
-                import(filePath.replace(__dirname, '.').replace(/\\/g, '/')).then(module => {
-                    const route = module.default;
-                    route.stack.forEach(layer => {
-                        if (layer.route) {
-                            const methods = Object.keys(layer.route.methods).filter(method => layer.route.methods[method]).join(', ');
-                            addRouteToDisplay('/' + fullCategory, routePath, 'api', methods);
-                        }
-                    });
-                }).catch(err => {
-                    console.error(`Failed to load route ${routePath}:`, err);
-                });
-            }
-        }
+  const addRouteToDisplay = (basePath, routePath, category, methods) => {
+    const fullPath = `${basePath}${routePath}`;
+    if (!displayedRoutes[category][basePath]) {
+      displayedRoutes[category][basePath] = [];
     }
-    traverseDir(apiDir);
+    displayedRoutes[category][basePath].push(`${fullPath} [${methods}]`);
+  };
 
-    res.json(displayedRoutes);
+  const privateRoutes = [
+    { path: '/buttons', route: buttonRoutes },
+    { path: '/datadonate', route: donorDataRoutes },
+    { path: '/kategori', route: kategoriRoutes },
+    { path: '/layanan', route: layananRoutes },
+    { path: '/produk', route: produkRoutes },
+    { path: '/survey', route: responsesRoutes },
+    { path: '/user', route: usersRoutes },
+    { path: '/store', route: storeRoutes },
+    { path: '/liststore', route: liststoreRoutes },
+    { path: '/payment', route: paymentRoutes },
+  ];
+
+  privateRoutes.forEach(({ path, route }) => {
+    route.stack.forEach((layer) => {
+      if (layer.route) {
+        const methods = Object.keys(layer.route.methods)
+          .filter((method) => layer.route.methods[method])
+          .join(', ');
+        addRouteToDisplay(path, '', 'private', methods);
+      }
+    });
+  });
+
+  const apiDir = path.join(__dirname, 'routes-fitur');
+  async function traverseDir(directory, category = '') {
+    const files = await fs.promises.readdir(directory);
+    for (const file of files) {
+      const filePath = path.join(directory, file);
+      const stat = await fs.promises.stat(filePath);
+      if (stat.isDirectory()) {
+        await traverseDir(filePath, category ? `${category}/${file}` : file);
+      } else if (file.endsWith('.js')) {
+        const routeName = file.replace('.js', '');
+        const fullCategory = category ? `api/${category}` : 'api';
+        const routePath = `/${routeName}`;
+        const moduleUrl = new URL(filePath, `file://${__dirname}/`).href;
+
+        try {
+          const module = await import(moduleUrl);
+          const route = module.default;
+          route.stack.forEach((layer) => {
+            if (layer.route) {
+              const methods = Object.keys(layer.route.methods)
+                .filter((method) => layer.route.methods[method])
+                .join(', ');
+              addRouteToDisplay('/' + fullCategory, routePath, 'api', methods);
+            }
+          });
+        } catch (err) {
+          console.error(`Failed to load route ${routePath}:`, err);
+        }
+      }
+    }
+  }
+
+  await traverseDir(apiDir);
+  res.json(displayedRoutes);
 });
 
-// load all api
-const apiRoutes = loadApiRoutes();
+const apiRoutes = await loadApiRoutes();
 
-// ini khusus pribadi (untuk kebutuhan website pribadi)
 app.use('/buttons', apiKeyMiddleware, buttonRoutes);
 app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
 app.use('/kategori', apiKeyMiddleware, kategoriRoutes);
