@@ -24,7 +24,7 @@ async function getEmojiSymbols(query) {
       }
     });
 
-    if (!symbols.length) {
+    if (!result.length) {
       return {
         symbols: [],
         error: 'Tidak ada kombinasi emoji yang ditemukan untuk permintaan ini.',
