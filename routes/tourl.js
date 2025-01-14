@@ -17,7 +17,7 @@ function isValidUrl(url) {
   }
 }
 
-router.post('/', async (req, res) => {
+router.post('/shorturl', async (req, res) => {
   try {
     const { originalUrl } = req.body;
 
