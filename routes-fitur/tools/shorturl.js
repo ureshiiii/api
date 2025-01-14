@@ -17,8 +17,7 @@ function isValidUrl(url) {
   }
 }
 
-// Buat short url
-router.get('/shorturl', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { url } = req.query;
 
@@ -65,28 +64,6 @@ router.get('/shorturl', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Terjadi kesalahan saat memproses URL.' });
-  }
-});
-
-// Redirect setiap short url user
-router.get('/:shortId', async (req, res) => {
-  try {
-    const { shortId } = req.params;
-
-    const [rows] = await db.query(
-      'SELECT original_url FROM urls WHERE short_id = ?',
-      [shortId]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'URL pendek tidak ditemukan.' });
-    }
-
-    const originalUrl = rows[0].original_url;
-    res.redirect(301, originalUrl);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Terjadi kesalahan saat mengalihkan URL.' });
   }
 });
 
