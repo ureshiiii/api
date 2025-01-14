@@ -18,6 +18,7 @@ import usersRoutes from './routes/users.js';
 import storeRoutes from './routes/store.js';
 import liststoreRoutes from './routes/liststore.js';
 import paymentRoutes from './routes/payment.js';
+import tourlRoutes from './routes/tourl.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -112,6 +113,7 @@ app.get('/server-info', (req, res) => {
       '/store',
       '/liststore',
       '/payment',
+      '/shorturl',
     ];
 
     res.json({
@@ -135,6 +137,7 @@ app.use('/user', apiKeyMiddleware, usersRoutes);
 app.use('/store', apiKeyMiddleware, storeRoutes);
 app.use('/liststore', apiKeyMiddleware, liststoreRoutes);
 app.use('/payment', apiKeyMiddleware, paymentRoutes);
+app.use('/shorturl', tourlRoutes);
 
 app.use((err, req, res, next) => {
   if (err.name === 'ValidationError') {
