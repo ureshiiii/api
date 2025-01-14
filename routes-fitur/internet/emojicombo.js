@@ -13,28 +13,16 @@ async function getEmojiSymbols(query) {
       };
     }
 
-    const encodedQuery = encodeURIComponent(query);
-    const response = await axios.get(
-      `https://emojicombos.com/search/${encodedQuery}`,
-      {
-        headers: {
-          'user-agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        },
+    const encodedQuery = encodeURIComponent(query); 
+    const { data } = await axios.get(`https://emojicombos.com/${encodedQuery}`);
+    const $ = cheerio.load(data);
+    const result = [];
+    $(".combo-ctn").each((index, element) => {
+      const combo = $(element).attr("data-combo");
+      if (combo && result.length < 10) {
+        result.push(combo); 
       }
-    );
-
-    const $ = cheerio.load(response.data);
-    const symbols = [];
-
-    $('div.main > div.mt-4 > div.grid > div.relative').each(
-      (index, element) => {
-        const symbolText = $(element).find('a > h2').text().trim();
-        if (symbolText && symbols.length < 10) {
-          symbols.push(symbolText);
-        }
-      }
-    );
+    });
 
     if (!symbols.length) {
       return {
@@ -44,7 +32,7 @@ async function getEmojiSymbols(query) {
     }
 
     return {
-      symbols: symbols,
+      symbols: result,
     };
   } catch (error) {
     console.error('Gagal mengambil kombinasi emoji:', error);
