@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import db from './config/database.js';
+import addResponseInfo from './config/addResponseInfo.js';
 
 dotenv.config();
 
@@ -155,16 +156,23 @@ async function loadApiRoutes() {
         try {
           const module = await import(moduleUrl);
           const route = module.default;
-          app.use(routePath, route);
+
+          // Tandai request yang berasal dari routes-fitur dan tambahkan middleware
+          app.use(
+            routePath,
+            (req, res, next) => {
+              req.isFromRouteFitur = true;
+              next();
+            },
+            addResponseInfo,
+            route
+          );
         } catch (err) {
           console.error(`Failed to load route ${routePath}:`, err);
         }
       }
     }
   }
-
-  await traverseDir(apiDir);
-  return routes;
 }
 
 const apiRoutes = await loadApiRoutes();
@@ -286,3 +294,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+  
