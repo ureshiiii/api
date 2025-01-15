@@ -8,11 +8,7 @@ const router = express.Router();
 async function jarak(dari, ke) {
   try {
     const url = `https://www.google.com/search?q=${encodeURIComponent(`jarak ${dari} ke ${ke}`)}&hl=id`;
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
+    const response = await axios.get(url);
     const html = response.data;
     const $ = cheerio.load(html);
     const hasil = {};
@@ -27,11 +23,9 @@ async function jarak(dari, ke) {
       if (imgUrl) hasil.img = imgUrl;
     }
 
-    hasil.jarak = $('div.BNeawe.deIvCb.AP7Wnd').first().text().trim();
-    hasil.waktu_tempuh = $('div.BNeawe.deIvCb.AP7Wnd').eq(1).text().trim();
-    hasil.rute = $('div.BNeawe.uEec3.AP7Wnd').text().trim()
+    hasil.desc = $('div.BNeawe.deIvCb.AP7Wnd').text()?.trim()
 
-    if (!hasil.jarak) {
+    if (!hasil.desc) {
         throw new Error("Tidak dapat menemukan informasi jarak.");
     }
     
@@ -47,7 +41,6 @@ router.get('/', async (req, res) => {
 
   if (!dari || !ke) {
     return res.status(400).json({
-      status: 'gagal',
       pesan: 'Parameter `dari` dan `ke` harus diisi!'
     });
   }
@@ -55,12 +48,10 @@ router.get('/', async (req, res) => {
   try {
     const dataJarak = await jarak(dari, ke);
     res.status(200).json({
-      status: 'sukses',
       data: dataJarak
     });
   } catch (error) {
     res.status(500).json({
-      status: 'gagal',
       pesan: error.message
     });
   }
