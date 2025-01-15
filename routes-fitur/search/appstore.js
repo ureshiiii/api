@@ -4,9 +4,9 @@ import express from 'express';
 
 const router = express.Router();
 
-async function getAppleProducts(search) {
+async function getAppleProducts(query) {
   try {
-    const { data } = await axios.get(`https://www.apple.com/us/search/${search}?src=serp`);
+    const { data } = await axios.get(`https://www.apple.com/us/search/${query}?src=serp`);
     const $ = cheerio.load(data);
 
     const products = [];
@@ -36,14 +36,14 @@ async function getAppleProducts(search) {
 router.get('/', async (req, res) => {
   const { query } = req.query;
 
-  if (!search) {
+  if (!query) {
     return res.status(400).json({
       message: 'Parameter `query` harus diisi!',
     });
   }
 
   try {
-    const result = await getAppleProducts(search);
+    const result = await getAppleProducts(query);
     if (result.message) {
         res.status(500).json(result);
     } else {
