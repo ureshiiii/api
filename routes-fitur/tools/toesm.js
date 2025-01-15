@@ -12,8 +12,8 @@ const convertCJSToESM = (code) => {
     .replace(/require\(['"](.+?)['"]\)/g, "import('$1')");
 };
 
-router.post('/', (req, res) => {
-  const { code } = req.body;
+router.get('/', async (req, res) => {
+  const { code } = req.query;
 
   if (!code) {
     return res.status(400).json({
