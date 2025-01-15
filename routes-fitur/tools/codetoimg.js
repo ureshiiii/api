@@ -85,8 +85,8 @@ async function code2img(code) {
   }
 }
 
-router.post('/', async (req, res) => {
-  const { code } = req.body;
+router.get('/', async (req, res) => {
+  const { code } = req.query;
 
   if (!code) {
     return res.status(400).json({
