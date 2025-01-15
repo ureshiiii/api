@@ -40,11 +40,11 @@ async function downloadTrack(songUrl, coverImage, csrfToken) {
     if (response.data.error === false) {
       return response.data.url;
     } else {
-      throw new Error(response.data.status);
+      return { message: response.data.status || 'Gagal mengunduh track.' };
     }
   } catch (error) {
     console.error('Error:', error.response ? error.response.data : error.message);
-    throw new Error('Failed to download track.'); // Melempar error agar ditangkap oleh handler di atasnya
+    return { message: error.response && error.response.data && error.response.data.message ? error.response.data.message : 'Gagal mengunduh track.' };
   }
 }
 
@@ -76,8 +76,11 @@ async function spotifydl(originalUrl) {
         csrfToken
       );
 
+      if (downloadUrl.message) {
+        return downloadUrl;
+      }
+
       return {
-        success: true,
         title: trackData.name,
         artist: trackData.artists[0].name,
         album: trackData.album.name,
@@ -88,11 +91,11 @@ async function spotifydl(originalUrl) {
         music: downloadUrl,
       };
     } else {
-      throw new Error('Data tidak ditemukan.'); // Melempar error agar ditangkap oleh handler di atasnya
+      return { message: 'Data tidak ditemukan.' };
     }
   } catch (error) {
     console.error('Error:', error);
-    throw new Error('Failed to process Spotify URL.'); // Melempar error agar ditangkap oleh handler di atasnya
+    return { message: error.response && error.response.data ? error.response.data.message || 'Gagal memproses URL Spotify.' : 'Gagal memproses URL Spotify.' };
   }
 }
 
@@ -101,24 +104,25 @@ router.get('/', async (req, res) => {
 
   if (!url) {
     return res.status(400).json({
-      success: false,
       message: 'Parameter `url` harus diisi!',
     });
   }
 
   if (!url.includes('open.spotify.com')) {
     return res.status(400).json({
-      success: false,
       message: 'URL tidak valid. Pastikan URL berasal dari open.spotify.com',
     });
   }
 
   try {
     const result = await spotifydl(url);
-    res.status(200).json(result);
+    if (result.message) {
+      res.status(400).json(result);
+    } else {
+      res.status(200).json(result);
+    }
   } catch (error) {
     res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
