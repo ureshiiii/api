@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
     res.status(200).json({
       data: {
         img: data.img,
-        jarak: data.desc.trim(),
+        jarak: data.desc,
       }
     });
   } catch (error) {
