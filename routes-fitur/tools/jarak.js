@@ -1,7 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { uploadImage } from '../../lib/uploadImage.js';
+import uploadImage from '../../lib/uploadImage.js';
 
 const router = express.Router();
 
