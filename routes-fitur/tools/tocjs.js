@@ -15,8 +15,8 @@ const convertESMToCJS = (code) => {
     .replace(/export (.*?) from ['"](.+?)['"];/g, "module.exports.$1 = require('$2');");
 };
 
-router.post('/', (req, res) => {
-  const { code } = req.body;
+router.get('/', async (req, res) => {
+  const { code } = req.query;
 
   if (!code) {
     return res.status(400).json({
