@@ -25,10 +25,6 @@ async function jarak(dari, ke) {
 
     hasil.desc = $('div.BNeawe.deIvCb.AP7Wnd').text()?.trim()
 
-    if (!hasil.desc) {
-        throw new Error("Tidak dapat menemukan informasi jarak.");
-    }
-    
     return hasil;
   } catch (error) {
     console.error('Error saat mengambil/memproses data jarak:', error);
