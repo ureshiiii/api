@@ -8,6 +8,7 @@ const router = express.Router();
 async function jarak(dari, ke) {
 	var html = (await axios(`https://www.google.com/search?q=${encodeURIComponent('jarak ' + dari + ' ke ' + ke)}&hl=id`)).data
 	var $ = cheerio.load(html), obj = {}
+	const img = html.split("var s=\'")?.[1]?.split("\'")?.[0];
 	if (/^data:.*?\/.*?;base64,/i.test(img)) {
       const imageBuffer = Buffer.from(img.split`,`[1], 'base64');
       obj.img = await uploadImage(imageBuffer);
