@@ -147,9 +147,10 @@ const apiKeyMiddleware = (req, res, next) => {
   }
 };
 
-function generateDynamicApiDocs() {
+async function generateDynamicApiDocs() {
   const apiDir = path.join(__dirname, 'routes-fitur');
   const apis = ['./routes/*.js'];
+  const routes = {};
 
   async function traverseDir(directory, category = '') {
     console.log('Traversing:', directory);
@@ -216,19 +217,17 @@ function generateDynamicApiDocs() {
     await traverseDir(apiDir);
     return routes
   }
-  
-  const routes = {}
+
+  await loadRoutes()
+
+  const swaggerSpec = swaggerJSDoc({ ...options, apis }); // Pindahkan swaggerJSDoc ke sini
 
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
   app.use('/docs/private', apiKeyMiddleware, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-  return {
-    ...options,
-    apis: apis,
-  };
+  return swaggerSpec
 }
 
-const dynamicSwaggerSpec = await generateDynamicApiDocs();
-const swaggerSpec = swaggerJSDoc(dynamicSwaggerSpec);
+const dynamicSwaggerSpec = await generateDynamicApiDocs()
 
-export default swaggerSpec;
+export default dynamicSwaggerSpec;

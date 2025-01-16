@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import db from './config/database.js';
-import swaggerSpec from './swagger.js';
+import dynamicSwaggerSpec from './swagger.js';
 
 dotenv.config();
 
@@ -212,7 +212,7 @@ app.use((err, req, res, next) => {
     .json({ message: 'Terjadi kesalahan di server.', error: err.message });
 });
 
-swaggerSpec;
+dynamicSwaggerSpec;
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
