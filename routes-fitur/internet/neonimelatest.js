@@ -29,7 +29,7 @@ async function neonimeLatest() {
             });
         });
 
-        return JSON.stringify(animeList, null, 2);
+        return animeList;
     } catch (error) {
         return error.message;
     }
