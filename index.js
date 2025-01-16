@@ -9,8 +9,6 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import db from './config/database.js';
-import addResponseInfo from './routes-fitur/addResponseInfo.js';
-import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger.js';
 
 dotenv.config();
@@ -131,56 +129,6 @@ app.get('/server-info', (req, res) => {
   }
 });
 
-async function loadApiRoutes() {
-  const apiDir = path.join(__dirname, 'routes-fitur');
-  const routes = {};
-
-  async function traverseDir(directory, category = '') {
-    const files = await fs.promises.readdir(directory);
-
-    for (const file of files) {
-      const filePath = path.join(directory, file);
-      const stat = await fs.promises.stat(filePath);
-
-      if (stat.isDirectory()) {
-        await traverseDir(filePath, category ? `${category}/${file}` : file);
-      } else if (file.endsWith('.js')) {
-        const routeName = file.replace('.js', '');
-        const fullCategory = category ? `api/${category}` : 'api';
-        const routePath = `/${fullCategory}/${routeName}`;
-
-        if (!routes[fullCategory]) {
-          routes[fullCategory] = [];
-        }
-        routes[fullCategory].push(routePath);
-
-        const moduleUrl = new URL(filePath, `file://${__dirname}/`).href;
-        try {
-          const module = await import(moduleUrl);
-          const route = module.default;
-
-          app.use(
-            routePath,
-            (req, res, next) => {
-              req.isFromRouteFitur = true;
-              next();
-            },
-            addResponseInfo,
-            route
-          );
-        } catch (err) {
-          console.error(`Failed to load route ${routePath}:`, err);
-        }
-      }
-    }
-  }
-
-  await traverseDir(apiDir);
-  return routes;
-}
-
-const apiRoutes = await loadApiRoutes();
-
 app.get('/', async (req, res) => {
   const displayedRoutes = {
     private: {},
@@ -219,17 +167,8 @@ app.get('/', async (req, res) => {
     });
   });
 
-  Object.entries(apiRoutes).forEach(([category, routes]) => {
-    routes.forEach(routePath => {
-        addRouteToDisplay('/' + category, routePath.replace('/' + category, ''), 'api', 'GET');
-    });
-  });
-
   res.json(displayedRoutes);
 });
-
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
-app.use('/docs/private', apiKeyMiddleware, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/buttons', apiKeyMiddleware, buttonRoutes);
 app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
@@ -272,6 +211,8 @@ app.use((err, req, res, next) => {
     .status(500)
     .json({ message: 'Terjadi kesalahan di server.', error: err.message });
 });
+
+swaggerSpec;
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

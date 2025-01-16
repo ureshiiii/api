@@ -2,6 +2,8 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import express from 'express';
+import swaggerUi from 'swagger-ui-express';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -121,24 +123,49 @@ function inferType(value) {
     }
 }
 
+const app = express()
+const apiKeyMiddleware = (req, res, next) => {
+  try {
+    const apiKey = req.headers['x-api-key'];
+    const validApiKey = process.env.API_KEY;
+
+    if (!apiKey) {
+      return res
+        .status(400)
+        .json({ message: 'API Key tidak ditemukan dalam header request.' });
+    }
+
+    if (apiKey !== validApiKey) {
+      return res.status(401).json({ message: 'API Key tidak valid.' });
+    }
+
+    next();
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: 'Terjadi kesalahan saat validasi API Key.' });
+  }
+};
+
 function generateDynamicApiDocs() {
   const apiDir = path.join(__dirname, 'routes-fitur');
   const apis = ['./routes/*.js'];
 
   async function traverseDir(directory, category = '') {
+    console.log('Traversing:', directory);
     const files = await fs.promises.readdir(directory);
 
     for (const file of files) {
       const filePath = path.join(directory, file);
       const stat = await fs.promises.stat(filePath);
-
+      console.log("Checking:", filePath);
       if (stat.isDirectory()) {
         await traverseDir(filePath, category ? `${category}/${file}` : file);
       } else if (file.endsWith('.js')) {
         const routeName = file.replace('.js', '');
         const fullCategory = category ? `api/${category}` : 'api';
         const routePath = `/${fullCategory}/${routeName}`;
-
+        console.log("route :", routePath)
         if (!routes[fullCategory]) {
           routes[fullCategory] = [];
         }
@@ -176,7 +203,6 @@ function generateDynamicApiDocs() {
               req.isFromRouteFitur = true;
               next();
             },
-            addResponseInfo,
             route
           );
         } catch (err) {
@@ -192,7 +218,9 @@ function generateDynamicApiDocs() {
   }
   
   const routes = {}
-  const loadedRoutes = loadRoutes()
+
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+  app.use('/docs/private', apiKeyMiddleware, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   return {
     ...options,
