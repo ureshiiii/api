@@ -10,10 +10,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import db from './config/database.js';
 import addResponseInfo from './routes-fitur/addResponseInfo.js';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './swagger.js';
 
 dotenv.config();
 
-// Import route yang diperlukan
 import buttonRoutes from './routes/buttons.js';
 import donorDataRoutes from './routes/donorData.js';
 import kategoriRoutes from './routes/kategori.js';
@@ -178,8 +179,7 @@ async function loadApiRoutes() {
   return routes;
 }
 
-// Tunggu sampai loadApiRoutes() selesai sebelum melanjutkan
-const apiRoutes = await loadApiRoutes(); 
+const apiRoutes = await loadApiRoutes();
 
 app.get('/', async (req, res) => {
   const displayedRoutes = {
@@ -195,7 +195,6 @@ app.get('/', async (req, res) => {
     displayedRoutes[category][basePath].push(`${fullPath} [${methods}]`);
   };
 
-  // Route private masih didaftarkan secara manual
   const privateRoutes = [
     { path: '/buttons', route: buttonRoutes },
     { path: '/datadonate', route: donorDataRoutes },
@@ -220,7 +219,6 @@ app.get('/', async (req, res) => {
     });
   });
 
-  // Route dari routes-fitur ditampilkan
   Object.entries(apiRoutes).forEach(([category, routes]) => {
     routes.forEach(routePath => {
         addRouteToDisplay('/' + category, routePath.replace('/' + category, ''), 'api', 'GET');
@@ -230,7 +228,9 @@ app.get('/', async (req, res) => {
   res.json(displayedRoutes);
 });
 
-// Daftarkan route private dengan apiKeyMiddleware
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+app.use('/docs/private', apiKeyMiddleware, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use('/buttons', apiKeyMiddleware, buttonRoutes);
 app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
 app.use('/kategori', apiKeyMiddleware, kategoriRoutes);
