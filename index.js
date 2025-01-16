@@ -181,7 +181,7 @@ app.use('/store', apiKeyMiddleware, storeRoutes);
 app.use('/liststore', apiKeyMiddleware, liststoreRoutes);
 app.use('/payment', apiKeyMiddleware, paymentRoutes);
 
-app.get('/:shortId', async (req, res) => {
+app.get('/u/:shortId', async (req, res) => {
   try {
     const { shortId } = req.params;
 
