@@ -230,4 +230,5 @@ async function generateDynamicApiDocs() {
 
 const dynamicSwaggerSpec = await generateDynamicApiDocs()
 
+export { loadRoutes }; 
 export default dynamicSwaggerSpec;
