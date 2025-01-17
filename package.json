@@ -8,14 +8,6 @@
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "keywords": [
-    "api",
-    "rest",
-    "mysql",
-    "express",
-    "swagger",
-    "docs"
-  ],
   "author": "Parhan",
   "license": "MIT",
   "dependencies": {
@@ -32,8 +24,6 @@
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
     "mysql2": "^3.9.1",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0",
     "tough-cookie": "^4.1.3"
   },
   "devDependencies": {
