@@ -181,6 +181,13 @@ app.use('/store', apiKeyMiddleware, storeRoutes);
 app.use('/liststore', apiKeyMiddleware, liststoreRoutes);
 app.use('/payment', apiKeyMiddleware, paymentRoutes);
 
+const apiRoutes = await loadRoutes();
+Object.keys(apiRoutes).forEach((category) => {
+    apiRoutes[category].forEach((routePath) => {
+        app.use(routePath);
+    });
+});
+
 app.get('/u/:shortId', async (req, res) => {
   try {
     const { shortId } = req.params;
