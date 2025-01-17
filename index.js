@@ -5,11 +5,10 @@ import os from 'os';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import db from './config/database.js';
-import dynamicSwaggerSpec, {loadRoutes} from './swagger.js';
+import dynamicSwaggerSpec, { loadRoutes } from './swagger.js';
 
 dotenv.config();
 
