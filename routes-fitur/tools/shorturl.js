@@ -49,7 +49,7 @@ router.get('/', async (req, res) => {
       return res.status(500).json({ error: 'Gagal menghasilkan URL pendek unik. Silakan coba lagi.' });
     }
 
-    const shortUrl = `https://${req.get('host')}/${shortId}`;
+    const shortUrl = `https://${req.get('host')}/u/${shortId}`;
 
     const [result] = await db.query(
       'INSERT INTO urls (short_id, original_url) VALUES (?, ?)',
