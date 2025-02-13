@@ -4,20 +4,32 @@ import db from '../config/database.js';
 const router = express.Router();
 
 router.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ success: false, message: 'Username and password are required.' });
+    const { username, password, owner_number } = req.body;
+    if (!username || !password || !owner_number) {
+        return res.status(400).json({ success: false, message: 'Masukkan Username, Password, dan Nomor Owner.' });
     }
+
     try {
         const [results] = await db.query('SELECT id, username, password FROM bot WHERE username = ?', [username]);
         if (results.length === 0) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+            return res.status(401).json({ success: false, message: 'Username atau Password salah.' });
         }
 
         const user = results[0];
 
         if (password !== user.password) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+            return res.status(401).json({ success: false, message: 'Username atau Password salah.' });
+        }
+
+        const userId = user.id;
+
+        const [existingLog] = await db.query('SELECT log_id, login_count FROM login_logs WHERE user_id = ?', [userId]);
+
+        if (existingLog.length > 0) {
+            const newLoginCount = existingLog[0].login_count + 1;
+            await db.query('UPDATE login_logs SET login_count = ?, owner_number = ?, login_time = CURRENT_TIMESTAMP WHERE log_id = ?', [newLoginCount, owner_number, existingLog[0].log_id]);
+        } else {
+            await db.query('INSERT INTO login_logs (user_id, username, login_count, owner_number) VALUES (?, ?, 1, ?)', [userId, username, owner_number]);
         }
 
         res.status(200).json({ success: true, message: 'Login successful.', userId: user.id });
@@ -34,11 +46,9 @@ router.post('/add', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Username and password are required.' });
     }
     try {
-        const hashedPassword = password;
-
         const [result] = await db.query(
             'INSERT INTO bot (username, password) VALUES (?, ?)',
-            [username, hashedPassword]
+            [username, password]
         );
 
         const newUserId = result.insertId;
@@ -64,6 +74,9 @@ router.delete('/delete/:id', async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
+
+        await db.query('DELETE FROM login_logs WHERE user_id=?', [userId]);
+
         res.status(200).json({ success: true, message: 'User deleted successfully.' });
     } catch (error) {
         console.error("Delete user error:", error);
