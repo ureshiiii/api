@@ -23,6 +23,7 @@ import usersRoutes from './routes/users.js';
 import storeRoutes from './routes/store.js';
 import liststoreRoutes from './routes/liststore.js';
 import paymentRoutes from './routes/payment.js';
+import botRoutes from './routes/bot.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -236,6 +237,7 @@ app.use('/user', apiKeyMiddleware, usersRoutes);
 app.use('/store', apiKeyMiddleware, storeRoutes);
 app.use('/liststore', apiKeyMiddleware, liststoreRoutes);
 app.use('/payment', apiKeyMiddleware, paymentRoutes);
+app.use('/bot', apiKeyMiddleware, botRoutes);
 
 app.get('/u/:shortId', async (req, res) => {
   try {
