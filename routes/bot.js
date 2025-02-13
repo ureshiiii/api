@@ -1,0 +1,74 @@
+import express from 'express';
+import db from '../config/database.js';
+
+const router = express.Router();
+
+router.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: 'Username and password are required.' });
+    }
+    try {
+        const [results] = await db.query('SELECT id, username, password FROM users WHERE username = ?', [username]);
+        if (results.length === 0) {
+            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+        }
+
+        const user = results[0];
+
+        if (password !== user.password) {
+            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+        }
+
+        res.status(200).json({ success: true, message: 'Login successful.', userId: user.id });
+
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+});
+
+router.post('/add', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: 'Username and password are required.' });
+    }
+    try {
+        const hashedPassword = password;
+
+        const [result] = await db.query(
+            'INSERT INTO users (username, password) VALUES (?, ?)',
+            [username, hashedPassword]
+        );
+
+        const newUserId = result.insertId;
+
+        res.status(201).json({ success: true, message: 'User added successfully.', userId: newUserId });
+
+    } catch (error) {
+        console.error("Add user error:", error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ success: false, message: 'Username already exists.' });
+        }
+        res.status(500).json({ success: false, message: 'Failed to add user.' });
+    }
+});
+
+router.delete('/delete/:id', async (req, res) => {
+    const userId = req.params.id;
+    if (!/^\d+$/.test(userId)) {
+        return res.status(400).json({ success: false, message: 'Invalid user ID.' });
+    }
+     try {
+        const [result] = await db.query('DELETE FROM users WHERE id = ?', [userId]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+        res.status(200).json({ success: true, message: 'User deleted successfully.' });
+    } catch (error) {
+        console.error("Delete user error:", error);
+        res.status(500).json({ success: false, message: 'Failed to delete user.' });
+    }
+});
+
+export default router;
