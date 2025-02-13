@@ -9,7 +9,7 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Username and password are required.' });
     }
     try {
-        const [results] = await db.query('SELECT id, username, password FROM users WHERE username = ?', [username]);
+        const [results] = await db.query('SELECT id, username, password FROM bot WHERE username = ?', [username]);
         if (results.length === 0) {
             return res.status(401).json({ success: false, message: 'Invalid credentials.' });
         }
@@ -37,7 +37,7 @@ router.post('/add', async (req, res) => {
         const hashedPassword = password;
 
         const [result] = await db.query(
-            'INSERT INTO users (username, password) VALUES (?, ?)',
+            'INSERT INTO bot (username, password) VALUES (?, ?)',
             [username, hashedPassword]
         );
 
@@ -60,7 +60,7 @@ router.delete('/delete/:id', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid user ID.' });
     }
      try {
-        const [result] = await db.query('DELETE FROM users WHERE id = ?', [userId]);
+        const [result] = await db.query('DELETE FROM bot WHERE id = ?', [userId]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
