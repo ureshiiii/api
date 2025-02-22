@@ -2,7 +2,7 @@ import express from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 const router = express.Router();
 
-const apiKey = 'AIzaSyBPmZItWxsRAJ5uqkliMxiZNPh6ArLKTAQ';
+const apiKey = 'AIzaSyDbuDpEO4ZZnPnYvnyNeTEfcrULMo0ZF-M';
 const modelName = 'gemini-1.5-pro-001';
 
 const genAI = new GoogleGenerativeAI(apiKey);
