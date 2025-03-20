@@ -91,7 +91,7 @@ router.post('/', async (req, res) => {
     const response = await globalThis.fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
-        'Authorization': `Bearer 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`,
+        'Authorization': `Bearer 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`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body),
