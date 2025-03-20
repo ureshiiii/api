@@ -17,45 +17,45 @@ function isValidUrl(url) {
   }
 }
 
+function isValidCustomId(id) {
+  const regex = /^[A-Za-z0-9_-]+$/;
+  return regex.test(id);
+}
+
 router.get('/', async (req, res) => {
   try {
-    const { url } = req.query;
-
+    const { url, customId } = req.query;
     if (!url) {
       return res.status(400).json({ error: 'Parameter `url` diperlukan.' });
     }
-
     if (!isValidUrl(url)) {
       return res.status(400).json({ error: 'URL tidak valid.' });
     }
-
     let shortId;
-    let maxAttempts = 5;
-    let isDuplicate = true;
-
-    while (isDuplicate && maxAttempts > 0) {
-      shortId = generateSecureId(7);
-
-      const [rows] = await db.query(
-        'SELECT 1 FROM urls WHERE short_id = ?',
-        [shortId]
-      );
-
-      isDuplicate = rows.length > 0;
-      maxAttempts--;
+    if (customId) {
+      if (!isValidCustomId(customId)) {
+        return res.status(400).json({ error: 'Custom ID hanya boleh berisi huruf, angka, strip (-) dan garis bawah (_).' });
+      }
+      const [rows] = await db.query('SELECT 1 FROM urls WHERE short_id = ?', [customId]);
+      if (rows.length > 0) {
+        return res.status(400).json({ error: 'Custom ID sudah digunakan. Silakan coba dengan ID yang lain.' });
+      }
+      shortId = customId;
+    } else {
+      let maxAttempts = 5;
+      let isDuplicate = true;
+      while (isDuplicate && maxAttempts > 0) {
+        shortId = generateSecureId(7);
+        const [rows] = await db.query('SELECT 1 FROM urls WHERE short_id = ?', [shortId]);
+        isDuplicate = rows.length > 0;
+        maxAttempts--;
+      }
+      if (isDuplicate) {
+        return res.status(500).json({ error: 'Gagal menghasilkan URL pendek unik. Silakan coba lagi.' });
+      }
     }
-
-    if (isDuplicate) {
-      return res.status(500).json({ error: 'Gagal menghasilkan URL pendek unik. Silakan coba lagi.' });
-    }
-
     const shortUrl = `https://${req.get('host')}/u/${shortId}`;
-
-    const [result] = await db.query(
-      'INSERT INTO urls (short_id, original_url) VALUES (?, ?)',
-      [shortId, url]
-    );
-
+    const [result] = await db.query('INSERT INTO urls (short_id, original_url) VALUES (?, ?)', [shortId, url]);
     if (result.affectedRows === 1) {
       res.status(201).json({ shortUrl });
     } else {
