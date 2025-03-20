@@ -260,6 +260,37 @@ app.get('/u/:shortId', async (req, res) => {
   }
 });
 
+app.get('/cdn/:secureId', async (req, res) => {
+  try {
+    const { secureId } = req.params;
+    
+    const selectQuery = `
+      SELECT filename, file_type, data, expired_at
+      FROM cdn_files
+      WHERE secure_id = ?
+    `;
+    
+    const [rows] = await db.query(selectQuery, [secureId]);
+    
+    if (!rows.length) return res.status(404).json({ error: 'File not found.' });
+    
+    const file = rows[0];
+    
+    if (file.expired_at && new Date(file.expired_at) < new Date()) {
+      await db.query('DELETE FROM cdn_files WHERE secure_id = ?', [secureId]);
+      return res.status(404).json({ error: 'File has expired.' });
+    }
+    
+    res.setHeader('Content-Type', file.file_type);
+    res.setHeader('Content-Disposition', `inline; filename="${file.filename}"`);
+    
+    return res.status(200).send(file.data);
+  } catch (error) {
+    console.error('File Retrieval Error:', error);
+    return res.status(500).json({ error: 'Error retrieving file.' });
+  }
+});
+
 app.use((err, req, res, next) => {
   if (err.name === 'ValidationError') {
     return res.status(400).json({ errors: err.errors });
