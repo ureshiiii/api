@@ -32,13 +32,11 @@ const DOMAIN = process.env.DOMAIN || 'api.ureshii.my.id';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middleware dasar
 app.use(morgan('dev'));
 app.use(express.json({ limit: '50mb' }));
 app.use(helmet());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// RATE LIMITER
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -47,7 +45,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS
 const corsOptions = (req, callback) => {
   const allowedOrigins = ['https://ureshii.my.id', /\.ureshii\.my\.id$/];
   const origin = req.headers.origin;
@@ -69,9 +66,28 @@ const corsOptions = (req, callback) => {
 
   callback(null, corsConfig);
 };
+
 app.use(cors(corsOptions));
 
-// API KEY MIDDLEWARE
+app.use(async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  req.visitorIP = ip;
+
+  try {
+    await db.query('UPDATE api_stats SET total_requests = total_requests + 1 WHERE id = 1');
+
+    const [rows] = await db.query('SELECT * FROM visitor_stats WHERE visitor_ip = ?', [ip]);
+    if (rows.length > 0) {
+      await db.query('UPDATE visitor_stats SET request_count = request_count + 1 WHERE visitor_ip = ?', [ip]);
+    } else {
+      await db.query('INSERT INTO visitor_stats (visitor_ip, request_count) VALUES (?, ?)', [ip, 1]);
+    }
+  } catch (error) {
+    console.error('Error updating API stats:', error);
+  }
+  next();
+});
+
 const apiKeyMiddleware = (req, res, next) => {
   try {
     const apiKey = req.headers['x-api-key'];
@@ -104,6 +120,22 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
+app.get('/server-stat', async (req, res) => {
+  try {
+    const [statsRows] = await db.query('SELECT total_requests FROM api_stats WHERE id = 1');
+    const totalRequests = statsRows.length ? statsRows[0].total_requests : 0;
+    const [visitorRows] = await db.query('SELECT COUNT(*) as uniqueCount FROM visitor_stats');
+    const uniqueVisitors = visitorRows[0].uniqueCount;
+
+    res.json({
+      visitorIP: req.visitorIP,
+      totalRequests,
+      uniqueVisitors
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil data.', error: error.message });
+  }
+});
 app.get('/server-info', (req, res) => {
   try {
     const totalMem = os.totalmem();
@@ -134,7 +166,6 @@ app.get('/server-info', (req, res) => {
   }
 });
 
-// LOAD ROUTES
 async function loadApiRoutes() {
   const apiDir = path.join(__dirname, 'routes-fitur');
   const routes = {};
@@ -185,7 +216,6 @@ async function loadApiRoutes() {
 
 const apiRoutes = await loadApiRoutes();
 
-// API ROUTES YANG DILINDUNGI API KEY
 app.use('/buttons', apiKeyMiddleware, buttonRoutes);
 app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
 app.use('/kategori', apiKeyMiddleware, kategoriRoutes);
@@ -244,7 +274,6 @@ app.get('/cdn/:secureId', async (req, res) => {
   }
 });
 
-// ERROR HANDLER
 app.use((err, req, res, next) => {
   if (err.name === 'ValidationError') {
     return res.status(400).json({ errors: err.errors });
