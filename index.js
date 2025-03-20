@@ -32,10 +32,13 @@ const DOMAIN = process.env.DOMAIN || 'api.ureshii.my.id';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Middleware dasar
 app.use(morgan('dev'));
 app.use(express.json({ limit: '50mb' }));
 app.use(helmet());
+app.use(express.static(path.join(__dirname, 'public')));
 
+// RATE LIMITER
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -44,6 +47,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// CORS
 const corsOptions = (req, callback) => {
   const allowedOrigins = ['https://ureshii.my.id', /\.ureshii\.my\.id$/];
   const origin = req.headers.origin;
@@ -65,9 +69,9 @@ const corsOptions = (req, callback) => {
 
   callback(null, corsConfig);
 };
-
 app.use(cors(corsOptions));
 
+// API KEY MIDDLEWARE
 const apiKeyMiddleware = (req, res, next) => {
   try {
     const apiKey = req.headers['x-api-key'];
@@ -130,6 +134,7 @@ app.get('/server-info', (req, res) => {
   }
 });
 
+// LOAD ROUTES
 async function loadApiRoutes() {
   const apiDir = path.join(__dirname, 'routes-fitur');
   const routes = {};
@@ -180,53 +185,7 @@ async function loadApiRoutes() {
 
 const apiRoutes = await loadApiRoutes();
 
-app.get('/', async (req, res) => {
-  const displayedRoutes = {
-    private: {},
-    api: {},
-  };
-
-  const addRouteToDisplay = (basePath, routePath, category, methods) => {
-    const fullPath = `${basePath}${routePath}`;
-    if (!displayedRoutes[category][basePath]) {
-      displayedRoutes[category][basePath] = [];
-    }
-    displayedRoutes[category][basePath].push(`${fullPath} [${methods}]`);
-  };
-
-  const privateRoutes = [
-    { path: '/buttons', route: buttonRoutes },
-    { path: '/datadonate', route: donorDataRoutes },
-    { path: '/kategori', route: kategoriRoutes },
-    { path: '/layanan', route: layananRoutes },
-    { path: '/produk', route: produkRoutes },
-    { path: '/survey', route: responsesRoutes },
-    { path: '/user', route: usersRoutes },
-    { path: '/store', route: storeRoutes },
-    { path: '/liststore', route: liststoreRoutes },
-    { path: '/payment', route: paymentRoutes },
-  ];
-
-  privateRoutes.forEach(({ path, route }) => {
-    route.stack.forEach((layer) => {
-      if (layer.route) {
-        const methods = Object.keys(layer.route.methods)
-          .filter((method) => layer.route.methods[method])
-          .join(', ');
-        addRouteToDisplay(path, '', 'private', methods);
-      }
-    });
-  });
-
-  Object.entries(apiRoutes).forEach(([category, routes]) => {
-    routes.forEach(routePath => {
-        addRouteToDisplay('/' + category, routePath.replace('/' + category, ''), 'api', 'GET');
-    });
-  });
-
-  res.json(displayedRoutes);
-});
-
+// API ROUTES YANG DILINDUNGI API KEY
 app.use('/buttons', apiKeyMiddleware, buttonRoutes);
 app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
 app.use('/kategori', apiKeyMiddleware, kategoriRoutes);
@@ -263,27 +222,21 @@ app.get('/u/:shortId', async (req, res) => {
 app.get('/cdn/:secureId', async (req, res) => {
   try {
     const { secureId } = req.params;
-    
     const selectQuery = `
       SELECT filename, file_type, data, expired_at
       FROM cdn_files
       WHERE secure_id = ?
     `;
-    
     const [rows] = await db.query(selectQuery, [secureId]);
-    
     if (!rows.length) return res.status(404).json({ error: 'File not found.' });
-    
     const file = rows[0];
-    
-    if (file.expired_at && new Date(file.expired_at) < new Date()) {
+    const expiredAt = file.expired_at ? new Date(file.expired_at) : null;
+    if (expiredAt && expiredAt < new Date()) {
       await db.query('DELETE FROM cdn_files WHERE secure_id = ?', [secureId]);
       return res.status(404).json({ error: 'File has expired.' });
     }
-    
     res.setHeader('Content-Type', file.file_type);
     res.setHeader('Content-Disposition', `inline; filename="${file.filename}"`);
-    
     return res.status(200).send(file.data);
   } catch (error) {
     console.error('File Retrieval Error:', error);
@@ -291,14 +244,13 @@ app.get('/cdn/:secureId', async (req, res) => {
   }
 });
 
+// ERROR HANDLER
 app.use((err, req, res, next) => {
   if (err.name === 'ValidationError') {
     return res.status(400).json({ errors: err.errors });
   }
   console.error(err);
-  res
-    .status(500)
-    .json({ message: 'Terjadi kesalahan di server.', error: err.message });
+  res.status(500).json({ message: 'Terjadi kesalahan di server.', error: err.message });
 });
 
 app.listen(PORT, () => {
