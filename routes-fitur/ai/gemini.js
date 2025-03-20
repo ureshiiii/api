@@ -3,7 +3,6 @@ import https from 'https';
 import crypto from 'crypto';
 
 const router = express.Router();
-const OPENROUTER_API_KEY = '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';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const agent = new https.Agent({ keepAlive: true });
 const sessions = {};
@@ -92,11 +91,9 @@ router.post('/', async (req, res) => {
     const response = await globalThis.fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "HTTP-Referer": "https://api.ureshii.my.id",
-        "X-Title": "Ureshii Api",
-        "Content-Type": "application/json"
-      },
+        'Authorization': `Bearer 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`,
+        'Content-Type': 'application/json'
+      }
       body: JSON.stringify(body),
       agent: agent
     });
