@@ -9,7 +9,7 @@ function generateSecureId(length) {
   return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').substring(0, length);
 }
 
-router.post('/upload', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { data, expired } = req.body;
     if (!data) return res.status(400).json({ error: 'Data is required.' });
