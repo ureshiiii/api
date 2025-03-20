@@ -3,7 +3,7 @@ import https from 'https';
 import crypto from 'crypto';
 
 const router = express.Router();
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = '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';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const agent = new https.Agent({ keepAlive: true });
 const sessions = {};
