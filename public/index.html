@@ -49,128 +49,86 @@
     <div class="hero-con-body inner-width">
       <div class="hero-head-text">
         <h1 class="hero-head-text-bubble">🥞 Created by Parhan</h1>
-        <h2>Welcome to API Ureshii 🐇</h1>
-        <p style="text-decoration: underline;">
-          Your delicious solution for seamless integrations
-        </p>
-        <p style="margin-top: 25px; color: white;">
-          The Ureshii API is a RestFull API system developed using Express JS and is intended for WhatsApp Bot developers.
-        </p>
+        <h2>Welcome to API Ureshii 🐇</h2>
+        <p style="text-decoration: underline;">Your delicious solution for seamless integrations</p>
+        <p style="margin-top: 25px; color: white;">The Ureshii API is a RestFull API system developed using Express JS and is intended for WhatsApp Bot developers.</p>
       </div>
       <a href="#docs" class="cta-button">Get Started</a>
-
       <div class="hero-stats-text">
         <div class="hero-stats-menu">
-          <b>
-            7
-          </b>
-          <p>
-            Total Request
-          </p>
+          <b>7</b>
+          <p>Total Request</p>
         </div>
         <div class="hero-stats-menu">
-          <b>
-            2
-          </b>
-          <p>
-            Total Visitor
-          </p>
+          <b>2</b>
+          <p>Total Visitor</p>
         </div>
         <div class="hero-stats-menu">
-          <b>
-            32
-          </b>
-          <p>
-            Total Endpoint
-          </p>
+          <b>32</b>
+          <p>Total Endpoint</p>
         </div>
         <div class="hero-stats-menu">
-          <b>
-            0
-          </b>
-          <p>
-            Daily Request
-          </p>
+          <b>0</b>
+          <p>Daily Request</p>
         </div>
       </div>
-
       <div class="hero-fitur-con">
         <div class="hero-fitur-text">
           <h2>Magic and Wonder in API Ureshii</h2>
-          <p style="text-decoration: underline;">
-            Maintaining safety and comfort
-          </p>
+          <p style="text-decoration: underline;">Maintaining safety and comfort</p>
         </div>
         <div class="feature-card">
           <i class="fas fa-bolt feature-icon"></i>
           <h3>Lightning Fast</h3>
-          <p>
-            Optimized for speed and performance
-          </p>
+          <p>Optimized for speed and performance</p>
         </div>
         <div class="feature-card">
           <i class="fas fa-shield-alt feature-icon"></i>
           <h3>Secure</h3>
-          <p>
-            Enterprise-grade security
-          </p>
+          <p>Enterprise-grade security</p>
         </div>
         <div class="feature-card">
           <i class="fas fa-infinity feature-icon"></i>
           <h3>Scalable</h3>
-          <p>
-            Grows with your needs
-          </p>
+          <p>Grows with your needs</p>
         </div>
       </div>
       <div class="hero-faq-con">
         <div class="hero-faq-text">
           <h2>Frequently Asked Questions</h2>
-          <p style="text-decoration: underline;">
-            Don't hesitate to ask!
-          </p>
+          <p style="text-decoration: underline;">Don't hesitate to ask!</p>
         </div>
         <div class="faq-question">
           <h5>What is RESTful API?</h5>
           <div class="faq-answer">
-            <p>
-              RESTful API is an architectural style for designing networked applications. It uses HTTP protocol to communicate with clients.
-            </p>
+            <p>RESTful API is an architectural style for designing networked applications. It uses HTTP protocol to communicate with clients.</p>
           </div>
         </div>
         <div class="faq-question">
           <h5>Does the api have a limit?</h5>
           <div class="faq-answer">
-            <p>
-              No, our API has no limits or restrictions. You can use it as much as you want without any issues.
-            </p>
+            <p>No, our API has no limits or restrictions. You can use it as much as you want without any issues.</p>
           </div>
         </div>
         <div class="faq-question">
           <h5>Is the API 100% free?</h5>
           <div class="faq-answer">
-            <p>
-              Yes, our API is completely free to use. There are no hidden charges or fees associated. Our API Funded by Donators. We are grateful for the support of our Donators.
-            </p>
+            <p>Yes, our API is completely free to use. There are no hidden charges or fees associated. Our API Funded by Donators. We are grateful for the support of our Donators.</p>
           </div>
         </div>
         <div class="faq-question">
           <h5>What is an endpoint in RESTful API?</h5>
           <div class="faq-answer">
-            <p>
-              An endpoint is a URL that is used to access a resource in a RESTful API.
-            </p>
+            <p>An endpoint is a URL that is used to access a resource in a RESTful API.</p>
           </div>
         </div>
       </div>
     </div>
   </section>
-
   <script src="js/navbar.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const colors = ['#F7F2FA', '#E8DFF5', '#CBB7E6', '#A18CD1'];
-
       for (let i = 0; i < 11; i++) {
         const circle = document.createElement('div');
         circle.className = 'deco-circle';
@@ -180,34 +138,22 @@
         circle.style.top = Math.random() * 90 + '%';
         circle.style.background = colors[Math.floor(Math.random() * colors.length)];
         document.body.appendChild(circle);
-
-        // Panggil fungsi animateCircle untuk setiap circle
         animateCircle(circle);
       }
-
       function animateCircle(circle) {
         let x = 0;
         let y = 0;
         let speedX = Math.random() * 2 - 1;
         let speedY = Math.random() * 2 - 1;
-
         function animate() {
           x += speedX;
           y += speedY;
           circle.style.left = x + 'px';
           circle.style.top = y + 'px';
-
-          if (x < 0 || x > window.innerWidth) {
-            speedX = -speedX;
-          }
-
-          if (y < 0 || y > window.innerHeight) {
-            speedY = -speedY;
-          }
-
+          if (x < 0 || x > window.innerWidth) speedX = -speedX;
+          if (y < 0 || y > window.innerHeight) speedY = -speedY;
           requestAnimationFrame(animate);
         }
-
         animate();
       }
     });
@@ -220,7 +166,6 @@
         const totalVisitor = data.visitors?.length || 0;
         const totalEndpoint = data.endpoints?.total || 0;
         const dailyRequest = Array.isArray(data.dailyRequests) ? data.dailyRequests.length : 0;
-        
         const statsMenus = document.querySelectorAll('.hero-stats-menu b');
         if (statsMenus.length >= 4) {
           statsMenus[0].textContent = totalRequest;
@@ -246,20 +191,12 @@
 <footer class="inner-width">
   <div class="footer-text-head">
     <h3>API Ureshii</h3>
-    <p>
-      Ureshii API is a Restfull API website aimed at WhatsApp Bot developers to make it easier to develop their bot features.
-    </p>
+    <p>Ureshii API is a Restfull API website aimed at WhatsApp Bot developers to make it easier to develop their bot features.</p>
   </div>
   <div class="footer-icon-con">
-    <a class="footer-icon" href="https://www.instagram.com/ureshii.id_" target="_blank">
-      <i class="fab fa-instagram"></i>
-    </a>
-    <a class="footer-icon" href="https://wa.me/6283873688108" target="_blank">
-      <i class="fab fa-whatsapp"></i>
-    </a>
-    <a class="footer-icon" href="https://www.ureshii.my.id" target="_blank">
-      <i class="fas fa-globe"></i>
-    </a>
+    <a class="footer-icon" href="https://www.instagram.com/ureshii.id_" target="_blank"><i class="fab fa-instagram"></i></a>
+    <a class="footer-icon" href="https://wa.me/6283873688108" target="_blank"><i class="fab fa-whatsapp"></i></a>
+    <a class="footer-icon" href="https://www.ureshii.my.id" target="_blank"><i class="fas fa-globe"></i></a>
   </div>
   <div class="footer-text-body">
     <h2>Follow us</h2>
@@ -274,3 +211,4 @@
   <div class="garis-footer"></div>
   <p class="footer-copyright">© 2024 - 2025 Ureshii Store, Parhan. All rights reserved.</p>
 </footer>
+</html>
