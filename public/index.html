@@ -46,6 +46,7 @@
       <div class="garis-putus"></div>
     </ul>
   </nav>
+  
   <section class="hero">
     <div class="hero-con-body inner-width">
       <div class="hero-head-text">
@@ -62,64 +63,46 @@
       <div class="hero-stats-text">
         <div class="hero-stats-menu">
           <b>0</b>
-          <p>
-            Total Request
-          </p>
+          <p>Total Request</p>
         </div>
         <div class="hero-stats-menu">
           <b>0</b>
-          <p>
-            Total Visitor
-          </p>
+          <p>Total Visitor</p>
         </div>
         <div class="hero-stats-menu">
           <b>0</b>
-          <p>
-            Total Endpoint
-          </p>
+          <p>Total Endpoint</p>
         </div>
         <div class="hero-stats-menu">
           <b>0</b>
-          <p>
-            Daily Request
-          </p>
+          <p>Daily Request</p>
         </div>
       </div>
       <div class="hero-fitur-con">
         <div class="hero-fitur-text">
           <h2>Magic and Wonder in API Ureshii</h2>
-          <p style="text-decoration: underline;">
-            Maintaining safety and comfort
-          </p>
+          <p style="text-decoration: underline;">Maintaining safety and comfort</p>
         </div>
         <div class="feature-card">
           <i class="fas fa-bolt feature-icon"></i>
           <h3>Lightning Fast</h3>
-          <p>
-            Optimized for speed and performance
-          </p>
+          <p>Optimized for speed and performance</p>
         </div>
         <div class="feature-card">
           <i class="fas fa-shield-alt feature-icon"></i>
           <h3>Secure</h3>
-          <p>
-            Enterprise-grade security
-          </p>
+          <p>Enterprise-grade security</p>
         </div>
         <div class="feature-card">
           <i class="fas fa-infinity feature-icon"></i>
           <h3>Scalable</h3>
-          <p>
-            Grows with your needs
-          </p>
+          <p>Grows with your needs</p>
         </div>
       </div>
       <div class="hero-faq-con">
         <div class="hero-faq-text">
           <h2>Frequently Asked Questions</h2>
-          <p style="text-decoration: underline;">
-            Don't hesitate to ask!
-          </p>
+          <p style="text-decoration: underline;">Don't hesitate to ask!</p>
         </div>
         <div class="faq-question">
           <h5>What is RESTful API?</h5>
@@ -141,7 +124,7 @@
           <h5>Is the API 100% free?</h5>
           <div class="faq-answer">
             <p>
-              Yes, our API is completely free to use. There are no hidden charges or fees associated. Our API Funded by Donators. We are grateful for the support of our Donators.
+              Yes, our API is completely free to use. There are no hidden charges or fees associated. Our API is funded by Donators.
             </p>
           </div>
         </div>
@@ -156,12 +139,16 @@
       </div>
     </div>
   </section>
-
-  <!-- Memuat file JavaScript eksternal -->
+  
+  <!-- Muat jQuery terlebih dahulu -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  
+  <!-- Muat file JavaScript Anda -->
   <script src="js/navbar.js"></script>
   <script src="js/stat.js"></script>
   <script src="js/deco.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  
+  <!-- Inline script untuk FAQ -->
   <script>
     $(document).ready(function() {
       $(".faq-question h5").click(function() {
@@ -170,32 +157,35 @@
       });
     });
   </script>
-</body>
-<footer class="inner-width">
-  <div class="footer-text-head">
-    <h3>API Ureshii</h3>
-    <p>
-      Ureshii API is a Restfull API website aimed at WhatsApp Bot developers to make it easier to develop their bot features.
+  
+  <!-- Footer ditempatkan di dalam body -->
+  <footer class="inner-width">
+    <div class="footer-text-head">
+      <h3>API Ureshii</h3>
+      <p>
+        Ureshii API is a Restfull API website aimed at WhatsApp Bot developers to make it easier to develop their bot features.
+      </p>
+    </div>
+    <div class="footer-icon-con">
+      <a class="footer-icon" href="https://www.instagram.com/ureshii.id_" target="_blank"><i class="fab fa-instagram"></i></a>
+      <a class="footer-icon" href="https://wa.me/6283873688108" target="_blank"><i class="fab fa-whatsapp"></i></a>
+      <a class="footer-icon" href="https://www.ureshii.my.id" target="_blank"><i class="fas fa-globe"></i></a>
+    </div>
+    <div class="footer-text-body">
+      <h2>Follow us</h2>
+      <a class="footer-body" href="https://www.instagram.com/ureshii.id_" target="_blank">Instagram</a>
+      <a class="footer-body" href="https://wa.me/6283873688108" target="_blank">WhatsApp</a>
+    </div>
+    <div class="footer-text-body">
+      <h2>Legal</h2>
+      <a class="footer-body" href="#" target="_blank">Privacy Policy</a>
+      <a class="footer-body" href="#" target="_blank">Terms of Services</a>
+    </div>
+    <div class="garis-footer"></div>
+    <p class="footer-copyright">
+      © 2024 - 2025 Ureshii Store, Parhan. All rights reserved.
     </p>
-  </div>
-  <div class="footer-icon-con">
-    <a class="footer-icon" href="https://www.instagram.com/ureshii.id_" target="_blank"><i class="fab fa-instagram"></i></a>
-    <a class="footer-icon" href="https://wa.me/6283873688108" target="_blank"><i class="fab fa-whatsapp"></i></a>
-    <a class="footer-icon" href="https://www.ureshii.my.id" target="_blank"><i class="fas fa-globe"></i></a>
-  </div>
-  <div class="footer-text-body">
-    <h2>Follow us</h2>
-    <a class="footer-body" href="https://www.instagram.com/ureshii.id_" target="_blank">Instagram</a>
-    <a class="footer-body" href="https://wa.me/6283873688108" target="_blank">WhatsApp</a>
-  </div>
-  <div class="footer-text-body">
-    <h2>Legal</h2>
-    <a class="footer-body" href="#" target="_blank">Privacy Policy</a>
-    <a class="footer-body" href="#" target="_blank">Terms of Services</a>
-  </div>
-  <div class="garis-footer"></div>
-  <p class="footer-copyright">
-    © 2024 - 2025 Ureshii Store, Parhan. All rights reserved.
-  </p>
-</footer>
-</html>
+  </footer>
+</body>
+        </html>
+                                                                                                   
