@@ -66,23 +66,6 @@ const corsOptions = (req, callback) => {
 
 app.use(cors(corsOptions));
 
-app.use(async (req, res, next) => {
-  try {
-    req.visitorIP = req.ip;
-    await db.query('UPDATE api_stats SET total_requests = total_requests + 1 WHERE id = 1');
-    const [rows] = await db.query('SELECT * FROM visitor_stats WHERE visitor_ip = ?', [req.ip]);
-    
-    if (rows.length > 0) {
-      await db.query('UPDATE visitor_stats SET request_count = request_count + 1 WHERE visitor_ip = ?', [req.ip]);
-    } else {
-      await db.query('INSERT INTO visitor_stats (visitor_ip, request_count) VALUES (?, ?)', [req.ip, 1]);
-    }
-  } catch (error) {
-    console.error('Error updating stats:', error);
-  }
-  next();
-});
-
 const apiKeyMiddleware = (req, res, next) => {
   const apiKey = req.headers['x-api-key'];
   const validApiKey = process.env.API_KEY;
@@ -126,8 +109,19 @@ async function loadApiRoutes() {
           const module = await import(new URL(filePath, `file://${__dirname}/`).href);
           app.use(
             routePath,
-            (req, _, next) => {
-              req.isFromRouteFitur = true;
+            async (req, res, next) => {
+              try {
+                await db.query('UPDATE api_stats SET total_requests = total_requests + 1 WHERE id = 1');
+                const [rows] = await db.query('SELECT * FROM visitor_stats WHERE visitor_ip = ?', [req.ip]);
+                
+                if (rows.length > 0) {
+                  await db.query('UPDATE visitor_stats SET request_count = request_count + 1 WHERE visitor_ip = ?', [req.ip]);
+                } else {
+                  await db.query('INSERT INTO visitor_stats (visitor_ip, request_count) VALUES (?, ?)', [req.ip, 1]);
+                }
+              } catch (error) {
+                console.error('Error updating stats:', error);
+              }
               next();
             },
             addResponseInfo,
@@ -225,8 +219,8 @@ app.get('/server-stat', async (req, res) => {
   try {
     const endpoints = Object.values(apiRoutes).flat();
     const [stats] = await db.query('SELECT total_requests FROM api_stats WHERE id = 1');
-    const [daily] = await db.query('SELECT date, requests FROM daily_requests ORDER BY date DESC');
-    const [avg] = await db.query('SELECT AVG(requests) as avgDaily FROM daily_requests');
+    const [daily] = await db.query('SELECT DATE(timestamp) as date, COUNT(*) as requests FROM visitor_stats GROUP BY DATE(timestamp) ORDER BY date DESC');
+    const [avg] = await db.query('SELECT AVG(requests) as avgDaily FROM (SELECT DATE(timestamp) as date, COUNT(*) as requests FROM visitor_stats GROUP BY DATE(timestamp)) daily');
     const [visitors] = await db.query('SELECT visitor_ip, request_count FROM visitor_stats ORDER BY request_count DESC');
 
     res.json({
