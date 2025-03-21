@@ -364,6 +364,7 @@ section {
   padding: 13.5px;
   margin-bottom: 20px;
   margin-top: 20px;
+  transition: all 0.3s ease-in-out;
 }
 
 .faq-question h5 {
@@ -383,7 +384,9 @@ section {
 }
 
 .faq-answer {
-  display: none;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-in-out;
   margin-top: 10px;
   font-size: 0.9rem;
 }
