@@ -49,21 +49,17 @@ const corsOptions = (req, callback) => {
   const allowedOrigins = ['https://ureshii.my.id', /\.ureshii\.my\.id$/];
   const origin = req.headers.origin;
   let corsConfig;
-
   if (req.method === 'GET') {
     corsConfig = { origin: '*' };
   } else if (
     allowedOrigins.some((allowedOrigin) =>
-      allowedOrigin instanceof RegExp
-        ? allowedOrigin.test(origin)
-        : allowedOrigin === origin
+      allowedOrigin instanceof RegExp ? allowedOrigin.test(origin) : allowedOrigin === origin
     )
   ) {
     corsConfig = { origin: origin };
   } else {
     corsConfig = { origin: false };
   }
-
   callback(null, corsConfig);
 };
 
@@ -72,10 +68,8 @@ app.use(cors(corsOptions));
 app.use(async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
   req.visitorIP = ip;
-
   try {
     await db.query('UPDATE api_stats SET total_requests = total_requests + 1 WHERE id = 1');
-
     const [rows] = await db.query('SELECT * FROM visitor_stats WHERE visitor_ip = ?', [ip]);
     if (rows.length > 0) {
       await db.query('UPDATE visitor_stats SET request_count = request_count + 1 WHERE visitor_ip = ?', [ip]);
@@ -92,22 +86,15 @@ const apiKeyMiddleware = (req, res, next) => {
   try {
     const apiKey = req.headers['x-api-key'];
     const validApiKey = process.env.API_KEY;
-
     if (!apiKey) {
-      return res
-        .status(400)
-        .json({ message: 'API Key tidak ditemukan dalam header request.' });
+      return res.status(400).json({ message: 'API Key tidak ditemukan dalam header request.' });
     }
-
     if (apiKey !== validApiKey) {
       return res.status(401).json({ message: 'API Key tidak valid.' });
     }
-
     next();
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Terjadi kesalahan saat validasi API Key.' });
+    res.status(500).json({ message: 'Terjadi kesalahan saat validasi API Key.' });
   }
 };
 
@@ -120,80 +107,28 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-app.get('/server-stat', async (req, res) => {
-  try {
-    const [statsRows] = await db.query('SELECT total_requests FROM api_stats WHERE id = 1');
-    const totalRequests = statsRows.length ? statsRows[0].total_requests : 0;
-    const [visitorRows] = await db.query('SELECT COUNT(*) as uniqueCount FROM visitor_stats');
-    const uniqueVisitors = visitorRows[0].uniqueCount;
-
-    res.json({
-      visitorIP: req.visitorIP,
-      totalRequests,
-      uniqueVisitors
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil data.', error: error.message });
-  }
-});
-app.get('/server-info', (req, res) => {
-  try {
-    const totalMem = os.totalmem();
-    const freeMem = os.freemem();
-    const usedMem = totalMem - freeMem;
-    const uptime = os.uptime();
-    const days = Math.floor(uptime / (60 * 60 * 24));
-    const hours = Math.floor((uptime % (60 * 60 * 24)) / (60 * 60));
-    const minutes = Math.floor((uptime % (60 * 60)) / 60);
-
-    const server = {
-      hostname: os.hostname(),
-      ram: `${formatBytes(usedMem)} / ${formatBytes(totalMem)}`,
-      freeram: `${formatBytes(freeMem)}`,
-      model: `${os.cpus()[0].model}`,
-      arsitektur: `${os.arch()} Core`,
-      inti: `${os.cpus().length}`,
-      uptime: `${days} hari ${hours} jam ${minutes} menit`,
-    };
-
-    res.json({
-      status: 'Database nya aktif hann :3',
-      pesan: 'Hacker jangan menyerang!',
-      server: server,
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil data.', error: error.message });
-  }
-});
-
 async function loadApiRoutes() {
   const apiDir = path.join(__dirname, 'routes-fitur');
   const routes = {};
-
   async function traverseDir(directory, category = '') {
     const files = await fs.promises.readdir(directory);
-
     for (const file of files) {
       const filePath = path.join(directory, file);
       const stat = await fs.promises.stat(filePath);
-
       if (stat.isDirectory()) {
         await traverseDir(filePath, category ? `${category}/${file}` : file);
       } else if (file.endsWith('.js')) {
         const routeName = file.replace('.js', '');
         const fullCategory = category ? `api/${category}` : 'api';
         const routePath = `/${fullCategory}/${routeName}`;
-
         if (!routes[fullCategory]) {
           routes[fullCategory] = [];
         }
         routes[fullCategory].push(routePath);
-
         const moduleUrl = new URL(filePath, `file://${__dirname}/`).href;
         try {
           const module = await import(moduleUrl);
           const route = module.default;
-
           app.use(
             routePath,
             (req, res, next) => {
@@ -209,7 +144,6 @@ async function loadApiRoutes() {
       }
     }
   }
-
   await traverseDir(apiDir);
   return routes;
 }
@@ -231,16 +165,10 @@ app.use('/bot', apiKeyMiddleware, botRoutes);
 app.get('/u/:shortId', async (req, res) => {
   try {
     const { shortId } = req.params;
-
-    const [rows] = await db.query(
-      'SELECT original_url FROM urls WHERE short_id = ?',
-      [shortId]
-    );
-
+    const [rows] = await db.query('SELECT original_url FROM urls WHERE short_id = ?', [shortId]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'URL pendek tidak ditemukan.' });
     }
-
     const originalUrl = rows[0].original_url;
     res.redirect(301, originalUrl);
   } catch (error) {
@@ -271,6 +199,64 @@ app.get('/cdn/:secureId', async (req, res) => {
   } catch (error) {
     console.error('File Retrieval Error:', error);
     return res.status(500).json({ error: 'Error retrieving file.' });
+  }
+});
+
+app.get('/server-info', (req, res) => {
+  try {
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const uptime = os.uptime();
+    const days = Math.floor(uptime / (60 * 60 * 24));
+    const hours = Math.floor((uptime % (60 * 60 * 24)) / (60 * 60));
+    const minutes = Math.floor((uptime % (60 * 60)) / 60);
+    const server = {
+      hostname: os.hostname(),
+      ram: `${formatBytes(usedMem)} / ${formatBytes(totalMem)}`,
+      freeram: `${formatBytes(freeMem)}`,
+      model: `${os.cpus()[0].model}`,
+      arsitektur: `${os.arch()} Core`,
+      inti: `${os.cpus().length}`,
+      uptime: `${days} hari ${hours} jam ${minutes} menit`,
+    };
+    res.json({
+      status: 'Database nya aktif hann :3',
+      pesan: 'Hacker jangan menyerang!',
+      server: server,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil data.', error: error.message });
+  }
+});
+
+app.get('/server-stat', async (req, res) => {
+  try {
+    let endpoints = [];
+    Object.values(apiRoutes).forEach(routeList => {
+      endpoints.push(...routeList);
+    });
+    const [statsRows] = await db.query('SELECT total_requests FROM api_stats WHERE id = 1');
+    const totalRequests = statsRows.length ? statsRows[0].total_requests : 0;
+    const [dailyRows] = await db.query('SELECT date, requests FROM daily_requests ORDER BY date DESC');
+    const [avgRows] = await db.query('SELECT AVG(requests) as avgDaily FROM daily_requests');
+    const avgDailyRequests = avgRows.length ? avgRows[0].avgDaily : 0;
+    const [visitorRows] = await db.query('SELECT visitor_ip, request_count FROM visitor_stats ORDER BY request_count DESC');
+    const summary = {
+      totalRequests,
+      avgDailyRequests
+    };
+    res.json({
+      endpoints: {
+        total: endpoints.length,
+        list: endpoints
+      },
+      dailyRequests: dailyRows,
+      summary,
+      visitors: visitorRows
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil data statistik', error: error.message });
   }
 });
 
