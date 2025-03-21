@@ -7,7 +7,6 @@
   <meta name="HandheldFriendly" content="true">
   <meta name="theme-color" content="#AA60C8">
   <title>API Ureshii</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://ajax.googleapis.com; style-src 'self' 'unsafe-inline';">
   <meta name="description" content="Ureshii API is a Restfull API website aimed at WhatsApp Bot developers to make it easier to develop their bot features.">
   <meta name="keywords" content="Ureshii, API, API Bot, Bot WhatsApp API, API Bot WhatsApp, API Ureshii">
   <meta name="robots" content="index, follow">
@@ -138,12 +137,8 @@
         </div>
       </div>
     </div>
-  </section>
+  </section> 
   
-  <!-- Muat jQuery terlebih dahulu -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  
-  <!-- Muat file JavaScript Anda -->
   <script src="js/navbar.js"></script>
   <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -198,8 +193,7 @@
       document.querySelectorAll('.hero-stats-menu b').forEach(el => el.textContent = 0);
     });
   </script>
-  
-  <!-- Inline script untuk FAQ -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>    
   <script>
     $(document).ready(function() {
       $(".faq-question h5").click(function() {
@@ -209,7 +203,6 @@
     });
   </script>
   
-  <!-- Footer ditempatkan di dalam body -->
   <footer class="inner-width">
     <div class="footer-text-head">
       <h3>API Ureshii</h3>
