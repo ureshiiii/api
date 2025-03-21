@@ -26,7 +26,7 @@ import paymentRoutes from './routes/payment.js';
 import botRoutes from './routes/bot.js';
 
 const app = express();
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 3000;
 const DOMAIN = process.env.DOMAIN || 'api.ureshii.my.id';
@@ -45,14 +45,12 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-
 app.use(limiter);
 
 const corsOptions = (req, callback) => {
   const allowedOrigins = ['https://ureshii.my.id', /\.ureshii\.my\.id$/];
   const origin = req.headers.origin;
   let corsConfig;
-  
   if (req.method === 'GET') {
     corsConfig = { origin: '*' };
   } else if (allowedOrigins.some(allowedOrigin => 
@@ -63,65 +61,40 @@ const corsOptions = (req, callback) => {
   }
   callback(null, corsConfig);
 };
-
 app.use(cors(corsOptions));
-
-const apiKeyMiddleware = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  const validApiKey = process.env.API_KEY;
-  
-  if (!apiKey) return res.status(400).json({ message: 'API Key tidak ditemukan' });
-  if (apiKey !== validApiKey) return res.status(401).json({ message: 'API Key tidak valid' });
-  next();
-};
-
-function formatBytes(bytes, decimals = 2) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
 
 async function loadApiRoutes() {
   const apiDir = path.join(__dirname, 'routes-fitur');
   const routes = {};
-
   async function traverseDir(directory, category = '') {
     const files = await fs.promises.readdir(directory);
-    
     for (const file of files) {
       const filePath = path.join(directory, file);
       const stat = await fs.promises.stat(filePath);
-      
       if (stat.isDirectory()) {
         await traverseDir(filePath, category ? `${category}/${file}` : file);
       } else if (file.endsWith('.js')) {
         const routeName = file.replace('.js', '');
         const fullCategory = category ? `api/${category}` : 'api';
         const routePath = `/${fullCategory}/${routeName}`;
-        
         if (!routes[fullCategory]) routes[fullCategory] = [];
         routes[fullCategory].push(routePath);
-        
         try {
           const module = await import(new URL(filePath, `file://${__dirname}/`).href);
           app.use(
             routePath,
-            async (req, res, next) => {
-              try {
-                await db.query('UPDATE api_stats SET total_requests = total_requests + 1 WHERE id = 1');
-                const [rows] = await db.query('SELECT * FROM visitor_stats WHERE visitor_ip = ?', [req.ip]);
-                
-                if (rows.length > 0) {
-                  await db.query('UPDATE visitor_stats SET request_count = request_count + 1 WHERE visitor_ip = ?', [req.ip]);
-                } else {
-                  await db.query('INSERT INTO visitor_stats (visitor_ip, request_count) VALUES (?, ?)', [req.ip, 1]);
-                }
-              } catch (error) {
-                console.error('Error updating stats:', error);
-              }
+            (req, res, next) => {
+              req.isFromRouteFitur = true;
+              db.query('UPDATE api_stats SET total_requests = total_requests + 1 WHERE id = 1').catch(console.error);
+              db.query('SELECT * FROM visitor_stats WHERE visitor_ip = ?', [req.ip])
+                .then(([rows]) => {
+                  if (rows.length > 0) {
+                    return db.query('UPDATE visitor_stats SET request_count = request_count + 1 WHERE visitor_ip = ?', [req.ip]);
+                  } else {
+                    return db.query('INSERT INTO visitor_stats (visitor_ip, request_count) VALUES (?, ?)', [req.ip, 1]);
+                  }
+                })
+                .catch(console.error);
               next();
             },
             addResponseInfo,
@@ -133,7 +106,6 @@ async function loadApiRoutes() {
       }
     }
   }
-  
   await traverseDir(apiDir);
   return routes;
 }
@@ -152,6 +124,23 @@ app.use('/liststore', apiKeyMiddleware, liststoreRoutes);
 app.use('/payment', apiKeyMiddleware, paymentRoutes);
 app.use('/bot', apiKeyMiddleware, botRoutes);
 
+function apiKeyMiddleware(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+  const validApiKey = process.env.API_KEY;
+  if (!apiKey) return res.status(400).json({ message: 'API Key tidak ditemukan' });
+  if (apiKey !== validApiKey) return res.status(401).json({ message: 'API Key tidak valid' });
+  next();
+}
+
+function formatBytes(bytes, decimals = 2) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
 app.get('/u/:shortId', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT original_url FROM urls WHERE short_id = ?', [req.params.shortId]);
@@ -164,20 +153,18 @@ app.get('/u/:shortId', async (req, res) => {
 
 app.get('/cdn/:secureId', async (req, res) => {
   try {
-    const [rows] = await db.query(`
-      SELECT filename, file_type, data, expired_at
-      FROM cdn_files
-      WHERE secure_id = ?
-    `, [req.params.secureId]);
-
+    const [rows] = await db.query(
+      `SELECT filename, file_type, data, expired_at
+       FROM cdn_files
+       WHERE secure_id = ?`,
+      [req.params.secureId]
+    );
     if (!rows.length) return res.status(404).json({ error: 'File tidak ditemukan' });
-    
     const file = rows[0];
     if (file.expired_at && new Date(file.expired_at) < new Date()) {
       await db.query('DELETE FROM cdn_files WHERE secure_id = ?', [req.params.secureId]);
       return res.status(404).json({ error: 'File expired' });
     }
-
     res.setHeader('Content-Type', file.file_type);
     res.setHeader('Content-Disposition', `inline; filename="${file.filename}"`);
     return res.status(200).send(file.data);
@@ -190,7 +177,6 @@ app.get('/server-info', (req, res) => {
   try {
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
-    
     res.json({
       status: 'Aktif',
       server: {
@@ -219,10 +205,9 @@ app.get('/server-stat', async (req, res) => {
   try {
     const endpoints = Object.values(apiRoutes).flat();
     const [stats] = await db.query('SELECT total_requests FROM api_stats WHERE id = 1');
-    const [daily] = await db.query('SELECT DATE(timestamp) as date, COUNT(*) as requests FROM visitor_stats GROUP BY DATE(timestamp) ORDER BY date DESC');
-    const [avg] = await db.query('SELECT AVG(requests) as avgDaily FROM (SELECT DATE(timestamp) as date, COUNT(*) as requests FROM visitor_stats GROUP BY DATE(timestamp)) daily');
+    const [daily] = await db.query('SELECT date, requests FROM daily_requests ORDER BY date DESC');
+    const [avg] = await db.query('SELECT AVG(requests) as avgDaily FROM daily_requests');
     const [visitors] = await db.query('SELECT visitor_ip, request_count FROM visitor_stats ORDER BY request_count DESC');
-
     res.json({
       endpoints: {
         total: endpoints.length,
@@ -240,7 +225,7 @@ app.get('/server-stat', async (req, res) => {
   }
 });
 
-app.use((err, req, res, _) => {
+app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ message: 'Kesalahan server', error: err.message });
 });
