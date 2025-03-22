@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="HandheldFriendly" content="true">
+  <meta name="theme-color" content="#AA60C8">
+  <title>API Ureshii — DOCS</title>
+  <meta name="description" content="Ureshii API is a Restfull API website aimed at WhatsApp Bot developers to make it easier to develop their bot features.">
+  <meta name="keywords" content="Ureshii, API, API Bot, Bot WhatsApp API, API Bot WhatsApp, API Ureshii">
+  <meta name="robots" content="index, follow">
+  <link rel="preconnect" href="https://fonts.cdnfonts.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="https://telegra.ph/file/26639eb6b34492ab4d64d-ae1bd07f964b80f7cd.jpg" type="image/png">
+
+  <link rel="preload" href="/js/navbar.js" as="script">
+  <link rel="preload" href="/js/deco.js" as="script">
+  <link rel="preload" href="/js/apiDocs.js" as="script">
+</head>
+<body>
+   <nav class="navigation-bar">
+    <span class="toggle-button"><i class="fa fa-bars"></i></span>
+    <h3>API Ureshii</h3>
+    <div class="overlay"></div>
+    <ul class="main-menu">
+      <h3 class="main-menu-img">API Ureshii</h3>
+      <a class="menu-item" href="https://api.ureshii.my.id">Home<i class="fa-solid fa-house"></i></a>
+      <a class="menu-item" href="https://wa.me/6283873688108">Whatsapp<i class="fab fa-whatsapp"></i></a>
+      <div class="menu-item has-submenu">
+        <a href="#" class="submenu-toggle">Another<i class="fa-solid fa-ellipsis"></i></a>
+        <ul class="submenu">
+          <div class="submenu-item">
+            <a href="https://www.ureshii.my.id/public/halaman/script-bot.html"><i class="fa-solid fa-robot"></i> Script bot</a>
+          </div>
+          <div class="submenu-item">
+            <a href="https://www.ureshii.my.id/public/halaman/developer.html"><i class="fa-solid fa-code"></i> Developer</a>
+          </div>
+        </ul>
+      </div>
+      <a class="menu-item" href="https://ureshii.my.id/public/halaman/donate.html">Dukung Saya<i class="fa-solid fa-hand-holding-heart"></i></a>
+      <div class="garis-putus"></div>
+      <a class="menu-item" href="https://www.ureshii.my.id/public/halaman/contact.html">Contact<i class="fa-solid fa-envelope"></i></a>
+      <a class="menu-item" href="https://www.ureshii.my.id">Website<i class="fa-solid fa-globe"></i></a>
+      <div class="garis-putus"></div>
+    </ul>
+  </nav>
+  
+  <section class="inner-width">
+    <div class="hero-docs-body">
+      <img class="hero-docs-img" src="https://files.catbox.moe/4aj1ve.gif">
+      <div class="hero-docs-text-head">
+        <h2>API Ureshii</h2> 
+        <b>v1.0.0</b>
+      </div>
+      <p style="color: white;">
+        Ureshii API is a Restfull API website aimed at WhatsApp Bot developers to make it easier to develop their bot features.
+      </p>
+      <div class="hero-docs-info">
+        <a href="https://wa.me/6283873688108">Contact</a>
+        <a href="https://ureshii.my.id/public/halaman/donate.html">Donate</a>
+        <a href="https://ureshii.my.id/public/halaman/donate.html">Channel WA</a>
+      </div>
+    </div>
+  </section>
+  
+  <section class="api-docs">
+    <div class="inner-width">
+      <div class="docs-header">
+        <h2>API Documentation</h2>
+        <div class="search-box">
+          <input type="text" id="apiSearch" placeholder="Search API...">
+          <i class="fas fa-search"></i>
+        </div>
+      </div>
+      
+      <div class="category-list" id="categoryList">
+        <div class="loading">Memuat API...</div>
+      </div>
+    </div>
+  </section>
+  
+  <template id="apiModalTemplate">
+    <div class="api-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title"></h3>
+          <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form class="test-form">
+            <div class="param-fields"></div>
+            <div class="form-group">
+              <label>API Key</label>
+              <input type="text" class="api-key" required>
+            </div>
+            <button type="submit" class="send-request">
+              <i class="fas fa-play"></i> Test Request
+            </button>
+          </form>
+          <div class="response-container">
+            <pre class="api-response"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="/js/deco.js?v=1.0.1" 
+          defer 
+          type="text/javascript" 
+          onerror="console.error('Gagal load deco.js')"></script>
+  <script src="/js/navbar.js?v=1.0.1" 
+          defer 
+          type="text/javascript" 
+          onerror="console.error('Gagal load navbar.js')"></script>          
+  <script src="/js/apiDocs.js?v=1.0.1" 
+          defer 
+          type="text/javascript" 
+          onerror="console.error('Gagal load apiDocs.js')"></script>          
+          
+  <footer class="inner-width">
+    <div class="footer-text-head">
+      <h3>API Ureshii</h3>
+      <p>
+        Ureshii API is a Restfull API website aimed at WhatsApp Bot developers to make it easier to develop their bot features.
+      </p>
+    </div>
+    <div class="footer-icon-con">
+      <a class="footer-icon" href="https://www.instagram.com/ureshii.id_" target="_blank"><i class="fab fa-instagram"></i></a>
+      <a class="footer-icon" href="https://wa.me/6283873688108" target="_blank"><i class="fab fa-whatsapp"></i></a>
+      <a class="footer-icon" href="https://www.ureshii.my.id" target="_blank"><i class="fas fa-globe"></i></a>
+    </div>
+    <div class="footer-text-body">
+      <h2>Follow us</h2>
+      <a class="footer-body" href="https://www.instagram.com/ureshii.id_" target="_blank">Instagram</a>
+      <a class="footer-body" href="https://wa.me/6283873688108" target="_blank">WhatsApp</a>
+    </div>
+    <div class="footer-text-body">
+      <h2>Legal</h2>
+      <a class="footer-body" href="#" target="_blank">Privacy Policy</a>
+      <a class="footer-body" href="#" target="_blank">Terms of Services</a>
+    </div>
+    <div class="garis-footer"></div>
+    <p class="footer-copyright">
+      © 2024 - 2025 Ureshii Store, Parhan. All rights reserved.
+    </p>
+  </footer>
+</body>
+</html

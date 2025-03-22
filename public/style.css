@@ -18,6 +18,195 @@
   --color-transparent-white: rgba(255, 255, 255, 0.2);
 }
 
+.hero-docs-text-head {
+  display: flex;
+  text-align: center;
+}
+.hero-docs-text-head h2 {
+  font-size: 2.5rem;
+  color: var(--color-text);
+}
+.hero-docs-text-head b {
+  margin-left: 15px;
+  font-size: 1.5rem;
+}
+.hero-docs-img {
+  width: 73.5%;
+  border-radius: 15px;
+  margin-top: 60px;
+  margin-bottom: 20px;
+}
+.hero-docs-info {
+  margin: 20px 0;
+  display: flex;
+  gap: 10px;
+}
+.hero-docs-info a {
+  color: var(--color-text);
+  text-decoration: underline;
+  font-size: 1.1rem;
+}
+/* API Documentation Section */
+.api-docs {
+  background: #1a1a1a;
+  padding: 2rem 0;
+}
+.docs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.search-box {
+  position: relative;
+  width: 300px;
+}
+#apiSearch {
+  width: 100%;
+  padding: 0.8rem 2.5rem 0.8rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #AA60C8;
+  background: #2a2a2a;
+  color: white;
+}
+.search-box i {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+.api-category {
+  margin-bottom: 3rem;
+}
+.category-title {
+  color: #AA60C8;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid currentColor;
+}
+.endpoint-card {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: transform 0.2s;
+}
+.endpoint-card:hover {
+  transform: translateY(-3px);
+}
+.endpoint-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.method {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+.method.get { background: #4CAF50; }
+.method.post { background: #2196F3; }
+.method.put { background: #FF9800; }
+.method.delete { background: #F44336; }
+.path {
+  color: #888;
+  font-family: monospace;
+}
+.test-btn {
+  margin-left: auto;
+  background: #AA60C8;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.params {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.param-tag {
+  background: #333;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+.api-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: #2a2a2a;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 8px;
+  padding: 2rem;
+  position: relative;
+}
+.close-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.test-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.form-group input {
+  padding: 0.5rem;
+  background: #333;
+  border: 1px solid #444;
+  color: white;
+  border-radius: 4px;
+}
+.send-request {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.api-response {
+  background: #1a1a1a;
+  padding: 1rem;
+  border-radius: 4px;
+  color: #00ff00;
+  font-family: monospace;
+  max-height: 300px;
+  overflow: auto;
+  display: none;
+}
+
 
 .inner-width {
   margin: auto;
