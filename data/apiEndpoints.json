@@ -1,0 +1,18 @@
+{
+  "AI (Artificial Intelligence)": [
+    {
+      "name": "Binging",
+      "description": "Convert your text to image",
+      "method": "GET",
+      "path": "/api/ai/binging",
+      "params": ["text"]
+    },
+    {
+      "name": "Blackbox",
+      "description": "Talk with Blackbox AI",
+      "method": "GET",
+      "path": "/api/ai/blackbox",
+      "params": ["question"]
+    }
+  ]
+}
