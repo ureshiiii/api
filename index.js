@@ -24,6 +24,7 @@ import storeRoutes from './routes/store.js';
 import liststoreRoutes from './routes/liststore.js';
 import paymentRoutes from './routes/payment.js';
 import botRoutes from './routes/bot.js';
+import apiListRoutes from './routes/apiList.js';
 
 dotenv.config();
 
@@ -148,6 +149,7 @@ async function loadApiRoutes() {
 const apiRoutes = await loadApiRoutes();
 
 // --- Api router
+app.use('/api-list', apiListRoutes);
 app.use('/buttons', apiKeyMiddleware, buttonRoutes);
 app.use('/datadonate', apiKeyMiddleware, donorDataRoutes);
 app.use('/kategori', apiKeyMiddleware, kategoriRoutes);
