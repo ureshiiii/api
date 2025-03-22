@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.get('/', (req, res) => {
   try {
-    const apiData = require('../../data/apiEndpoints.json');
+    const apiData = require('../data/apiEndpoints.json');
     res.json(apiData);
   } catch (error) {
     res.status(500).json({ error: 'Failed to load API list', details: error.message });
